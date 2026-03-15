@@ -1,0 +1,48 @@
+---
+import { getCollection, render } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import NavBar from '../../components/NavBar.astro';
+
+export async function getStaticPaths() {
+	const articles = await getCollection('articles');
+	return articles.map((article) => ({
+		params: { id: article.id },
+		props: { article },
+	}));
+}
+
+const { article } = Astro.props;
+const { Content } = await render(article);
+---
+
+<BaseLayout title={article.data.title}>
+  <NavBar />
+  <main class="max-w-3xl mx-auto px-6 py-12 prose prose-invert">
+    <div class="mb-8">
+      <p class="text-xs text-zinc-500 uppercase tracking-widest mb-1">
+        {article.data.era} · {article.data.country.join(', ')}
+      </p>
+      <h1 class="text-4xl font-bold tracking-tight mb-2">
+        {article.data.title}
+      </h1>
+      <p class="text-zinc-400 italic">{article.data.summary}</p>
+    </div>
+
+    <div class="mt-8 border-t border-zinc-800 pt-8">
+      <Content />
+    </div>
+
+    <div class="mt-12 border-t border-zinc-800 pt-8">
+      <h3 class="text-sm font-bold uppercase tracking-widest mb-4">Sources</h3>
+      <ul class="space-y-2 text-sm text-zinc-400">
+        {article.data.sources.map(source => (
+          <li>
+            <a href={source.url} target="_blank" rel="noopener noreferrer" class="hover:text-white underline decoration-zinc-700 underline-offset-4">
+              {source.label}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </main>
+</BaseLayout>

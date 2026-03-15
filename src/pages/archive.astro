@@ -1,0 +1,29 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import NavBar from '../components/NavBar.astro';
+
+const articles = await getCollection('articles');
+---
+
+<BaseLayout title="Archive">
+  <NavBar />
+  <main class="max-w-3xl mx-auto px-6 py-12">
+    <h1 class="text-3xl font-bold mb-8 tracking-tight">Archive</h1>
+    <ul class="space-y-6">
+      {articles.map(article => (
+        <li>
+          <a href={`/articles/${article.id}`} class="group block">
+            <p class="text-xs text-zinc-500 uppercase tracking-widest mb-1">
+              {article.data.era} · {article.data.country.join(', ')}
+            </p>
+            <h2 class="text-xl font-semibold group-hover:text-red-400 transition">
+              {article.data.title}
+            </h2>
+            <p class="text-zinc-400 text-sm mt-1">{article.data.summary}</p>
+          </a>
+        </li>
+      ))}
+    </ul>
+  </main>
+</BaseLayout>
