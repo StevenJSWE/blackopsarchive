@@ -9,9 +9,13 @@ const pins = articles.map(a => ({
   slug: a.id,
   title: a.data.title,
   summary: a.data.summary,
+  status: a.data.status,
   lat: a.data.lat,
   lng: a.data.lng,
 }));
+
+const confirmed = pins.filter(p => p.status === 'confirmed').length;
+const alleged = pins.filter(p => p.status === 'alleged').length;
 ---
 
 <BaseLayout title="Map">
@@ -20,7 +24,12 @@ const pins = articles.map(a => ({
     <div class="flex-1 relative">
       <div class="absolute top-4 left-4 z-[9999] bg-black/90 px-3 py-2 font-mono border border-classified-green pointer-events-none">
         <p class="text-classified-red text-[10px] uppercase tracking-widest mb-1">Active Intel</p>
-        <p class="text-xs"><span class="text-classified-green font-bold">{pins.length}</span><span class="text-[#e5e5e5]"> pins found</span></p>
+        <p class="text-xs mb-0.5"><span class="text-classified-green font-bold">{pins.length}</span><span class="text-[#e5e5e5]"> operations mapped</span></p>
+        <p class="text-[10px] text-[#4a4a4a]">
+          <span style="color:#39ff14">{confirmed} confirmed</span>
+          <span class="mx-1">·</span>
+          <span style="color:#cc0000">{alleged} alleged</span>
+        </p>
       </div>
       <Map pins={pins} client:only="react" />
     </div>
