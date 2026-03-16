@@ -173,6 +173,15 @@ hr {
   white-space: nowrap;
 }
 
+/* ── Blink animation (nav status dot, cursor) ────────────── */
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+.blink {
+  animation: blink 1.2s step-start infinite;
+}
+
 /* ── Atmospheric overlays ─────────────────────────────────── */
 .scanlines {
   position: fixed;

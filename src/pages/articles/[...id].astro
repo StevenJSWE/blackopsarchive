@@ -18,26 +18,27 @@ const { Content } = await render(article);
 <BaseLayout title={article.data.title}>
   <NavBar />
   <main class="max-w-3xl mx-auto px-6 py-12 prose prose-invert">
-    <div class="mb-8">
-      <p class="text-xs text-zinc-500 uppercase tracking-widest mb-1">
+    <div class="mb-8 not-prose">
+      <span class="inline-block border-2 border-classified-red text-classified-red text-[10px] font-stencil tracking-[0.25em] px-2 py-0.5 -rotate-1 mb-3 opacity-90">DECLASSIFIED</span>
+      <p class="text-[10px] text-classified-green uppercase tracking-widest mb-2 font-mono">
         {article.data.era} · {article.data.country.join(', ')}
       </p>
-      <h1 class="text-4xl font-bold tracking-tight mb-2">
+      <h1 class="font-stencil text-4xl tracking-wide mb-3 text-[#e5e5e5]">
         {article.data.title}
       </h1>
-      <p class="text-zinc-400 italic">{article.data.summary}</p>
+      <p class="text-[#707070] italic font-mono text-sm border-l-2 border-classified-red pl-3">{article.data.summary}</p>
     </div>
 
-    <div class="mt-8 border-t border-zinc-800 pt-8">
+    <div class="mt-8 border-t border-terminal-grey pt-8">
       <Content />
     </div>
 
-    <div class="mt-12 border-t border-zinc-800 pt-8">
-      <h3 class="text-sm font-bold uppercase tracking-widest mb-4">Sources</h3>
-      <ul class="space-y-2 text-sm text-zinc-400">
+    <div class="mt-12 border-t border-terminal-grey pt-8 not-prose">
+      <h3 class="font-stencil text-sm uppercase tracking-widest mb-4 text-classified-green">Sources</h3>
+      <ul class="space-y-2 text-sm text-[#707070] font-mono">
         {article.data.sources.map(source => (
-          <li>
-            <a href={source.url} target="_blank" rel="noopener noreferrer" class="hover:text-white underline decoration-zinc-700 underline-offset-4">
+          <li class="before:content-['›'] before:text-classified-red before:mr-2">
+            <a href={source.url} target="_blank" rel="noopener noreferrer" class="hover:text-classified-green underline decoration-terminal-grey underline-offset-4 transition-colors duration-200">
               {source.label}
             </a>
           </li>
