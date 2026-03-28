@@ -1,21 +1,75 @@
 ---
-const { title } = Astro.props;
+interface Props {
+  title: string;
+  description?: string;
+  image?: string;
+  canonicalURL?: string;
+  type?: 'website' | 'article';
+}
+
+const {
+  title,
+  description = "A declassified archive of confirmed and alleged intelligence operations — CIA, MI6, Mossad, NSA, FBI, KGB and beyond.",
+  image = "/og-default.png",
+  type = "website",
+} = Astro.props;
+
 import '../styles/global.css';
+
+const siteURL = "https://blackopsarchive.com";
+const canonicalURL = new URL(Astro.url.pathname, siteURL).toString();
+const ogImage = image.startsWith("http") ? image : new URL(image, siteURL).toString();
+const fullTitle = title === "Map" ? "Black Ops Archive — Declassified Intelligence Operations" : `${title} | Black Ops Archive`;
 ---
 <!DOCTYPE html>
 <html lang="en" class="h-full">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="generator" content={Astro.generator} />
+
+    <!-- Primary meta -->
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonicalURL} />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content={type} />
+    <meta property="og:url" content={canonicalURL} />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:site_name" content="Black Ops Archive" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content={canonicalURL} />
+    <meta name="twitter:title" content={fullTitle} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+
+    <!-- Theme -->
+    <meta name="theme-color" content="#0a0a0a" />
+    <meta name="color-scheme" content="dark" />
+
+    <!-- Robots -->
+    <meta name="robots" content="index, follow" />
+
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Russo+One&family=IBM+Plex+Mono:wght@400;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Russo+One&family=IBM+Plex+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet" />
+
+    <!-- Leaflet CSS (for map page) -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
-    <title>{title} | Black Ops Archive</title>
+
+    <slot name="head" />
   </head>
   <body class="bg-terminal-black text-[#e5e5e5] h-full overflow-x-hidden">
     <slot />
+    <!-- Atmospheric overlays -->
     <div class="scanlines" aria-hidden="true"></div>
     <div class="grain" aria-hidden="true"></div>
+    <div class="crt-glow" aria-hidden="true"></div>
   </body>
 </html>

@@ -3,10 +3,16 @@ import { getCollection } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import NavBar from '../components/NavBar.astro';
 
-const articles = await getCollection('articles');
+const allArticles = await getCollection('articles');
+
+// Sort newest-first by date
+const articles = allArticles.sort(
+  (a, b) => b.data.date.getTime() - a.data.date.getTime()
+);
+
 const confirmedCount = articles.filter(a => a.data.status === 'confirmed').length;
-const allegedCount = articles.filter(a => a.data.status === 'alleged').length;
-const disputedCount = articles.filter(a => a.data.status === 'disputed').length;
+const allegedCount   = articles.filter(a => a.data.status === 'alleged').length;
+const disputedCount  = articles.filter(a => a.data.status === 'disputed').length;
 
 const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
   confirmed: { label: 'CONFIRMED', color: '#39ff14' },
@@ -15,118 +21,168 @@ const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
 };
 ---
 
-<BaseLayout title="Archive">
-  <NavBar />
-  <main class="max-w-3xl mx-auto px-6 py-12">
+<BaseLayout
+  title="Archive"
+  description={`Declassified intelligence operations — ${articles.length} operations on record spanning CIA, MI6, NSA, Mossad, FBI, KGB and beyond.`}
+>
+  <NavBar currentPath="/archive" />
 
+  <main class="max-w-3xl mx-auto px-6 py-10">
+
+    <!-- Header -->
     <div class="mb-10">
-      <span class="inline-block border-2 border-classified-red text-classified-red text-[10px] font-stencil tracking-[0.25em] px-2 py-0.5 -rotate-1 mb-3 opacity-90">DECLASSIFIED</span>
-      <h1 class="font-stencil text-4xl text-classified-green tracking-wide mb-2">Archive</h1>
-      <p class="font-mono text-[11px] text-[#4a4a4a] tracking-widest uppercase">
-        {confirmedCount} confirmed · {allegedCount} alleged · {articles.length} total operations
+      <span class="stamp-classified mb-4 inline-block">Declassified</span>
+      <h1 class="font-stencil text-4xl text-classified-green tracking-wide mb-3 mt-3">
+        Archive
+      </h1>
+      <p class="font-mono text-[11px] text-dim tracking-widest uppercase">
+        <span class="text-classified-green">{confirmedCount} confirmed</span>
+        <span class="mx-1.5">·</span>
+        <span class="text-classified-red">{allegedCount} alleged</span>
+        {disputedCount > 0 && (
+          <>
+            <span class="mx-1.5">·</span>
+            <span style="color:#f59e0b">{disputedCount} disputed</span>
+          </>
+        )}
+        <span class="mx-1.5">·</span>
+        <span>{articles.length} operations total</span>
       </p>
     </div>
 
     <!-- Filter tabs -->
-    <div class="flex gap-2 mb-8 flex-wrap">
+    <div class="flex gap-2 mb-8 flex-wrap" id="filter-bar">
       <button
         data-filter="all"
-        class="filter-btn text-[10px] font-mono uppercase tracking-widest px-3 py-1.5 border cursor-pointer transition-all duration-200"
-        style="border-color:#39ff14; color:#39ff14; background:rgba(57,255,20,0.07);"
+        data-color="#39ff14"
+        class="filter-btn active text-[10px] font-mono uppercase tracking-widest px-3 py-1.5 border cursor-pointer transition-all duration-200"
+        style="border-color:#39ff14; color:#39ff14; background:rgba(57,255,20,0.06);"
       >
-        ALL ({articles.length})
+        All ({articles.length})
       </button>
       <button
         data-filter="confirmed"
+        data-color="#39ff14"
         class="filter-btn text-[10px] font-mono uppercase tracking-widest px-3 py-1.5 border cursor-pointer transition-all duration-200"
-        style="border-color:#4a4a4a; color:#707070;"
+        style="border-color:#2a2a2a; color:#4a4a4a;"
       >
-        CONFIRMED ({confirmedCount})
+        Confirmed ({confirmedCount})
       </button>
       <button
         data-filter="alleged"
+        data-color="#cc0000"
         class="filter-btn text-[10px] font-mono uppercase tracking-widest px-3 py-1.5 border cursor-pointer transition-all duration-200"
-        style="border-color:#4a4a4a; color:#707070;"
+        style="border-color:#2a2a2a; color:#4a4a4a;"
       >
-        ALLEGED ({allegedCount})
+        Alleged ({allegedCount})
       </button>
       {disputedCount > 0 && (
         <button
           data-filter="disputed"
+          data-color="#f59e0b"
           class="filter-btn text-[10px] font-mono uppercase tracking-widest px-3 py-1.5 border cursor-pointer transition-all duration-200"
-          style="border-color:#4a4a4a; color:#707070;"
+          style="border-color:#2a2a2a; color:#4a4a4a;"
         >
-          DISPUTED ({disputedCount})
+          Disputed ({disputedCount})
         </button>
       )}
     </div>
 
     <!-- Article list -->
-    <ul class="divide-y divide-terminal-grey" id="archive-list">
+    <ul class="divide-y divide-[#1a1a1a]" id="archive-list">
       {articles.map(article => {
         const statusCfg = STATUS_CONFIG[article.data.status] ?? STATUS_CONFIG.alleged;
+        const year = article.data.date.getFullYear();
         return (
           <li data-status={article.data.status}>
-            <a href={`/articles/${article.id}`} class="group block py-5 pl-4 border-l-2 border-transparent hover:border-classified-green transition-all duration-200">
-              <div class="flex items-center gap-3 mb-1 flex-wrap">
-                <p class="text-[10px] text-classified-green uppercase tracking-widest font-mono">
-                  {article.data.era} · {article.data.country.join(', ')}
-                </p>
+            <a
+              href={`/articles/${article.id}`}
+              class="group block py-6 pl-3 border-l-2 border-transparent hover:border-classified-green transition-all duration-200 hover:pl-4"
+            >
+              <!-- Meta row -->
+              <div class="flex items-center gap-2 mb-2 flex-wrap">
+                <span class="text-[10px] text-classified-green uppercase tracking-widest font-mono">
+                  {article.data.era}
+                </span>
+                <span class="text-dim text-[10px] font-mono">·</span>
+                <span class="text-[10px] text-mid font-mono uppercase tracking-widest">
+                  {article.data.country.join(', ')}
+                </span>
                 <span
-                  class="text-[9px] font-mono tracking-widest px-1.5 py-0.5 border"
-                  style={`color:${statusCfg.color}; border-color:${statusCfg.color};`}
+                  class="text-[9px] font-mono tracking-widest px-1.5 py-0.5 border ml-1"
+                  style={`color:${statusCfg.color}; border-color:${statusCfg.color}; background:${statusCfg.color}0f;`}
                 >
                   {statusCfg.label}
                 </span>
-                <span class="text-[9px] font-mono text-[#4a4a4a]">
+                <span class="text-[9px] font-mono text-dim">
                   {article.data.agency.join(' / ')}
                 </span>
+                <span class="text-[9px] font-mono text-dim ml-auto hidden sm:inline">{year}</span>
               </div>
-              <h2 class="text-xl font-stencil text-[#e5e5e5] group-hover:text-classified-green transition-colors duration-200">
+
+              <!-- Title -->
+              <h2 class="text-xl font-stencil text-light group-hover:text-classified-green transition-colors duration-200 leading-snug mb-1.5">
                 {article.data.title}
               </h2>
-              <p class="text-[#707070] text-sm mt-1 font-mono">{article.data.summary}</p>
+
+              <!-- Summary -->
+              <p class="text-mid text-[13px] font-mono leading-relaxed line-clamp-2">
+                {article.data.summary}
+              </p>
+
+              <!-- Category pills -->
+              {article.data.category && article.data.category.length > 0 && (
+                <div class="flex flex-wrap gap-1.5 mt-3">
+                  {article.data.category.slice(0, 3).map((cat: string) => (
+                    <span class="text-[8px] font-mono uppercase tracking-widest px-1.5 py-0.5 border border-[#2a2a2a] text-dim">
+                      {cat}
+                    </span>
+                  ))}
+                </div>
+              )}
             </a>
           </li>
         );
       })}
     </ul>
 
+    <!-- Empty state -->
+    <p id="empty-state" class="hidden font-mono text-[11px] text-dim text-center py-16 tracking-widest uppercase">
+      — No records found —
+    </p>
+
   </main>
 </BaseLayout>
 
 <script>
-  const STATUS_COLORS: Record<string, string> = {
-    all:       '#39ff14',
-    confirmed: '#39ff14',
-    alleged:   '#cc0000',
-    disputed:  '#f59e0b',
-  };
-
   const buttons = document.querySelectorAll<HTMLButtonElement>('.filter-btn');
   const items   = document.querySelectorAll<HTMLLIElement>('#archive-list li');
+  const empty   = document.getElementById('empty-state')!;
+
+  function applyFilter(filter: string) {
+    let visible = 0;
+    items.forEach(item => {
+      const show = filter === 'all' || item.dataset.status === filter;
+      item.style.display = show ? '' : 'none';
+      if (show) visible++;
+    });
+    empty.classList.toggle('hidden', visible > 0);
+  }
 
   buttons.forEach(btn => {
     btn.addEventListener('click', () => {
       const filter = btn.dataset.filter ?? 'all';
-      const activeColor = STATUS_COLORS[filter];
+      const color  = btn.dataset.color ?? '#39ff14';
 
       buttons.forEach(b => {
-        const c = STATUS_COLORS[b.dataset.filter ?? 'all'];
-        if (b === btn) {
-          b.style.borderColor = c;
-          b.style.color = c;
-          b.style.background = `${c}12`;
-        } else {
-          b.style.borderColor = '#4a4a4a';
-          b.style.color = '#707070';
-          b.style.background = 'transparent';
-        }
+        const isActive = b === btn;
+        const c = b.dataset.color ?? '#39ff14';
+        b.style.borderColor = isActive ? c : '#2a2a2a';
+        b.style.color       = isActive ? c : '#4a4a4a';
+        b.style.background  = isActive ? `${c}0f` : 'transparent';
       });
 
-      items.forEach(item => {
-        item.style.display = (filter === 'all' || item.dataset.status === filter) ? '' : 'none';
-      });
+      applyFilter(filter);
     });
   });
 </script>

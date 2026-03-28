@@ -1,11 +1,53 @@
-<nav class="flex justify-between items-center px-6 py-4 bg-terminal-black border-b border-terminal-grey">
-  <a href="/" class="flex items-center gap-2 font-stencil text-classified-green tracking-widest uppercase text-sm">
-    <span class="blink text-classified-green leading-none">●</span>
-    Black Ops Archive
+---
+interface Props {
+  currentPath?: string;
+}
+const { currentPath = Astro.url.pathname } = Astro.props;
+
+function isActive(href: string) {
+  if (href === '/') return currentPath === '/';
+  return currentPath.startsWith(href);
+}
+---
+
+<nav class="flex justify-between items-center px-6 py-4 bg-terminal-black border-b border-[#1e1e1e] sticky top-0 z-[9990] backdrop-blur-sm">
+
+  <!-- Wordmark -->
+  <a href="/" class="flex items-center gap-2.5 group">
+    <span class="blink text-classified-green leading-none text-xs">●</span>
+    <span class="font-stencil text-classified-green tracking-[0.12em] uppercase text-sm group-hover:opacity-80 transition-opacity duration-200">
+      Black Ops Archive
+    </span>
   </a>
-  <div class="flex items-center gap-6 text-sm">
-    <span class="font-mono text-[10px] text-classified-red uppercase tracking-widest border border-classified-red px-2 py-0.5 opacity-80">Classified</span>
-    <a href="/" class="font-mono uppercase tracking-widest text-[#e5e5e5] hover:text-classified-green transition-colors duration-200">Map</a>
-    <a href="/archive" class="font-mono uppercase tracking-widest text-[#e5e5e5] hover:text-classified-green transition-colors duration-200">Archive</a>
+
+  <!-- Nav links -->
+  <div class="flex items-center gap-1">
+    <span class="font-mono text-[9px] text-classified-red uppercase tracking-widest border border-classified-red px-2 py-0.5 opacity-70 mr-4 hidden sm:inline">
+      Classified
+    </span>
+
+    <a
+      href="/"
+      class:list={[
+        "font-mono text-[11px] uppercase tracking-widest px-3 py-1.5 border transition-all duration-200",
+        isActive('/')
+          ? "border-classified-green text-classified-green bg-classified-green/5"
+          : "border-transparent text-mid hover:text-classified-green hover:border-[#2a2a2a]"
+      ]}
+    >
+      Map
+    </a>
+
+    <a
+      href="/archive"
+      class:list={[
+        "font-mono text-[11px] uppercase tracking-widest px-3 py-1.5 border transition-all duration-200",
+        isActive('/archive')
+          ? "border-classified-green text-classified-green bg-classified-green/5"
+          : "border-transparent text-mid hover:text-classified-green hover:border-[#2a2a2a]"
+      ]}
+    >
+      Archive
+    </a>
   </div>
 </nav>
