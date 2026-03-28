@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import MarkerClusterGroup from "react-leaflet-cluster";
 import L from "leaflet";
@@ -69,17 +70,55 @@ function createClusterIcon(cluster) {
   });
 }
 
+// Lat-only bounds — locks N/S edges but allows infinite horizontal wrapping
+const LAT_BOUNDS = L.latLngBounds([[-85.0511, -36000], [85.0511, 36000]]);
+
+// Calculate the minimum zoom where world tiles fill the container.
+// Called BEFORE the map renders so MapContainer starts at the right zoom—
+// preventing the race condition where leaflet.markercluster builds cluster
+// centroids at one zoom, then FitWorldMinZoom snaps to another.
+function calcMinZoom() {
+  if (typeof window === "undefined") return 2; // SSR fallback
+  return Math.ceil(Math.log2(Math.max(window.innerWidth, window.innerHeight) / 256));
+}
+
+// Only handles window resize after initial render
+function FitWorldMinZoom() {
+  const map = useMap();
+  useEffect(() => {
+    const update = () => {
+      const { x, y } = map.getSize();
+      const zoom = Math.ceil(Math.log2(Math.max(x, y) / 256));
+      map.setMinZoom(zoom);
+      if (map.getZoom() < zoom) map.setZoom(zoom);
+    };
+    map.on("resize", update);
+    return () => map.off("resize", update);
+  }, [map]);
+  return null;
+}
+
 export default function Map({ pins }) {
+  // Pre-calculate at render time so MapContainer initialises at the correct zoom.
+  // leaflet.markercluster builds cluster centroids on first render; if we let
+  // FitWorldMinZoom snap the zoom afterwards, those centroids become stale and
+  // get misaligned by worldCopyJump wrapping.
+  const minZoom = calcMinZoom();
+
   return (
-    <div style={{ height: "100%", width: "100%", minHeight: "500px" }}>
+    <div style={{ position: "absolute", inset: 0 }}>
       <MapContainer
         center={[20, 0]}
-        zoom={2}
-        minZoom={2}
+        zoom={minZoom}
+        minZoom={minZoom}
+        maxBounds={LAT_BOUNDS}
+        maxBoundsViscosity={1.0}
+        worldCopyJump={true}
         style={{ height: "100%", width: "100%", background: "#0a0a0a" }}
         scrollWheelZoom={true}
         zoomControl={true}
       >
+        <FitWorldMinZoom />
         <TileLayer
           url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
           attribution='&copy; <a href="https://carto.com/" style="color:#4a4a4a">CARTO</a>'
@@ -91,6 +130,9 @@ export default function Map({ pins }) {
           spiderfyOnMaxZoom={true}
           maxClusterRadius={50}
           animate={true}
+          chunkedLoading={true}
+          removeOutsideVisibleBounds={false}
+          disableClusteringAtZoom={minZoom}
         >
           {pins.map((pin) => {
             const statusColor = STATUS_COLORS[pin.status] || STATUS_COLORS.alleged;
