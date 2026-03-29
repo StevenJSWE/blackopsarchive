@@ -356,6 +356,93 @@ main {
   margin-left: 2px;
 }
 
+/* ── Print dossier ──────────────────────────────────────────── */
+@media print {
+  /* Reset to paper */
+  body {
+    background: #fff !important;
+    color: #111 !important;
+    font-size: 12pt;
+    font-family: "Courier New", Courier, monospace;
+  }
+
+  /* Kill overlays */
+  .scanlines, .grain, .crt-glow,
+  nav, footer, .no-print-sources,
+  button, [onclick] { display: none !important; }
+
+  /* Dossier page border */
+  main {
+    max-width: 100%;
+    padding: 2cm 2.5cm;
+    border: 2px solid #111;
+    position: relative;
+  }
+
+  /* Watermark */
+  main::before {
+    content: "DECLASSIFIED";
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(-35deg);
+    font-size: 80pt;
+    font-family: "Courier New", monospace;
+    font-weight: bold;
+    color: rgba(0,0,0,0.04);
+    letter-spacing: 0.1em;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Header stamp */
+  main::after {
+    content: "CLASSIFICATION: DECLASSIFIED — BLACK OPS ARCHIVE";
+    display: block;
+    font-size: 7pt;
+    letter-spacing: 0.15em;
+    text-align: center;
+    border-top: 1px solid #111;
+    padding-top: 6pt;
+    margin-top: 1cm;
+  }
+
+  h1 {
+    font-size: 20pt;
+    font-family: "Courier New", monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #111 !important;
+    border-bottom: 2px solid #111;
+    padding-bottom: 6pt;
+    margin-bottom: 12pt;
+  }
+
+  h2, h3 {
+    font-size: 13pt;
+    color: #111 !important;
+    font-family: "Courier New", monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-top: 18pt;
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 4pt;
+  }
+
+  p, li { color: #111 !important; line-height: 1.6; }
+  a { color: #111 !important; text-decoration: underline; }
+
+  .stamp-classified {
+    border: 2px solid #cc0000 !important;
+    color: #cc0000 !important;
+    font-family: "Courier New", monospace;
+    font-weight: bold;
+  }
+
+  /* Force page break before sources */
+  .prose + section { page-break-before: always; }
+}
+
 /* ── Mobile ─────────────────────────────────────────────────── */
 @media (max-width: 640px) {
   body {

@@ -14,24 +14,211 @@ const pins = articles.map(a => ({
   lng: a.data.lng,
 }));
 
-const confirmed = pins.filter(p => p.status === 'confirmed').length;
-const alleged = pins.filter(p => p.status === 'alleged').length;
+const confirmed  = pins.filter(p => p.status === 'confirmed').length;
+const alleged    = pins.filter(p => p.status === 'alleged').length;
+const disputed   = pins.filter(p => p.status === 'disputed').length;
+
+// Unique agencies + countries for stats bar
+const agencies  = [...new Set(articles.flatMap(a => a.data.agency))].length;
+const countries = [...new Set(articles.flatMap(a => a.data.country))].length;
 ---
 
-<BaseLayout title="Map">
-  <div class="flex flex-col h-screen overflow-hidden">
-    <NavBar />
-    <div class="flex-1 relative">
-      <div class="absolute top-4 left-4 z-[9999] bg-black/90 px-3 py-2 font-mono border border-classified-green pointer-events-none">
-        <p class="text-classified-red text-[10px] uppercase tracking-widest mb-1">Active Intel</p>
-        <p class="text-xs mb-0.5"><span class="text-classified-green font-bold">{pins.length}</span><span class="text-[#e5e5e5]"> operations mapped</span></p>
-        <p class="text-[10px] text-[#4a4a4a]">
-          <span style="color:#39ff14">{confirmed} confirmed</span>
-          <span class="mx-1">·</span>
-          <span style="color:#cc0000">{alleged} alleged</span>
-        </p>
+<BaseLayout title="Map" description="A declassified map of confirmed and alleged intelligence operations — CIA, MI6, NSA, Mossad, KGB and beyond.">
+
+  <!-- ── Boot screen overlay ───────────────────────────────── -->
+  <div id="boot-screen" aria-hidden="true">
+    <div id="boot-inner">
+      <p class="boot-label">BLACK OPS ARCHIVE</p>
+      <div id="boot-lines"></div>
+      <div class="boot-bar-wrap">
+        <div id="boot-bar"></div>
       </div>
+      <p id="boot-status" class="boot-status">INITIALISING...</p>
+    </div>
+  </div>
+
+  <!-- ── Page shell ────────────────────────────────────────── -->
+  <div class="flex flex-col h-screen overflow-hidden" id="page-shell" style="opacity:0">
+    <NavBar currentPath="/" />
+
+    <div class="flex-1 relative">
+
+      <!-- Stats overlay (top-left) -->
+      <div class="absolute top-4 left-4 z-[9999] pointer-events-none select-none">
+        <div class="bg-black/90 border border-classified-green px-3 py-2.5 font-mono backdrop-blur-sm">
+          <p class="text-classified-red text-[9px] uppercase tracking-[0.3em] mb-2 flex items-center gap-1.5">
+            <span class="blink">●</span> Active Intel
+          </p>
+          <p class="text-[11px] mb-1">
+            <span class="text-classified-green font-bold text-base">{pins.length}</span>
+            <span class="text-light"> operations mapped</span>
+          </p>
+          <div class="flex flex-col gap-0.5 text-[10px] mt-1.5 border-t border-[#1e1e1e] pt-1.5">
+            <span><span style="color:#39ff14">{confirmed}</span><span class="text-dim"> confirmed</span></span>
+            <span><span style="color:#cc0000">{alleged}</span><span class="text-dim"> alleged</span></span>
+            {disputed > 0 && <span><span style="color:#f59e0b">{disputed}</span><span class="text-dim"> disputed</span></span>}
+          </div>
+          <div class="flex gap-3 text-[10px] mt-1.5 border-t border-[#1e1e1e] pt-1.5 text-dim">
+            <span><span class="text-mid">{agencies}</span> agencies</span>
+            <span><span class="text-mid">{countries}</span> countries</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Legend (bottom-right) -->
+      <div class="absolute bottom-6 right-4 z-[9999] pointer-events-none select-none">
+        <div class="bg-black/85 border border-[#2a2a2a] px-3 py-2 font-mono backdrop-blur-sm">
+          <p class="text-[8px] uppercase tracking-[0.25em] text-dim mb-2">Status</p>
+          <div class="flex flex-col gap-1">
+            <div class="flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full" style="background:#39ff14; box-shadow:0 0 6px #39ff14;"></span>
+              <span class="text-[9px] text-mid uppercase tracking-widest">Confirmed</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full" style="background:#cc0000; box-shadow:0 0 6px #cc0000;"></span>
+              <span class="text-[9px] text-mid uppercase tracking-widest">Alleged</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full" style="background:#f59e0b; box-shadow:0 0 6px #f59e0b;"></span>
+              <span class="text-[9px] text-mid uppercase tracking-widest">Disputed</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <Map pins={pins} client:only="react" />
     </div>
   </div>
 </BaseLayout>
+
+<!-- ── Boot screen styles ─────────────────────────────────── -->
+<style>
+  #boot-screen {
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    background: #0a0a0a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.6s ease;
+  }
+  #boot-screen.fade-out {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  #boot-inner {
+    width: min(480px, 90vw);
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  .boot-label {
+    font-family: 'Russo One', sans-serif;
+    color: #39ff14;
+    font-size: clamp(14px, 3vw, 20px);
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    margin: 0 0 24px 0;
+  }
+
+  #boot-lines {
+    font-size: 11px;
+    color: #4a4a4a;
+    line-height: 1.8;
+    margin-bottom: 20px;
+    min-height: 88px;
+  }
+  #boot-lines .line { color: #707070; }
+  #boot-lines .line.ok::after {
+    content: ' [OK]';
+    color: #39ff14;
+  }
+  #boot-lines .line.err::after {
+    content: ' [REDACTED]';
+    color: #cc0000;
+  }
+
+  .boot-bar-wrap {
+    height: 2px;
+    background: #1a1a1a;
+    margin-bottom: 10px;
+    overflow: hidden;
+  }
+  #boot-bar {
+    height: 100%;
+    width: 0%;
+    background: #39ff14;
+    box-shadow: 0 0 8px #39ff14;
+    transition: width 0.1s linear;
+  }
+
+  .boot-status {
+    font-size: 10px;
+    color: #39ff14;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin: 0;
+  }
+</style>
+
+<!-- ── Boot screen script ─────────────────────────────────── -->
+<script define:vars={{ total: pins.length, confirmed, alleged }}>
+  const LINES = [
+    { text: 'LOADING CLASSIFIED ARCHIVE DATABASE...', delay: 0,   cls: 'ok'  },
+    { text: 'VERIFYING SECURITY CLEARANCE LEVEL 5...', delay: 180, cls: 'ok'  },
+    { text: 'DECRYPTING OPERATION RECORDS...',         delay: 360, cls: 'ok'  },
+    { text: `INDEXING ${total} OPERATIONS (${confirmed} CONFIRMED / ${alleged} ALLEGED)...`, delay: 540, cls: 'ok' },
+    { text: 'CROSS-REFERENCING AGENCY MANIFESTS...',   delay: 720, cls: 'ok'  },
+    { text: 'LOADING GEOSPATIAL INTELLIGENCE...',      delay: 880, cls: 'ok'  },
+  ];
+
+  const screen    = document.getElementById('boot-screen');
+  const linesEl   = document.getElementById('boot-lines');
+  const barEl     = document.getElementById('boot-bar');
+  const statusEl  = document.getElementById('boot-status');
+  const pageShell = document.getElementById('page-shell');
+
+  // Skip boot if already seen this session
+  if (sessionStorage.getItem('booted')) {
+    screen.style.display = 'none';
+    pageShell.style.opacity = '1';
+  } else {
+    sessionStorage.setItem('booted', '1');
+
+    // Animate lines
+    LINES.forEach(({ text, delay, cls }, i) => {
+      setTimeout(() => {
+        const p = document.createElement('p');
+        p.className = `line ${cls}`;
+        p.textContent = `> ${text}`;
+        linesEl.appendChild(p);
+        // progress bar
+        barEl.style.width = `${Math.round(((i + 1) / LINES.length) * 100)}%`;
+      }, delay);
+    });
+
+    // Status text cycling
+    const statuses = ['INITIALISING...', 'DECRYPTING...', 'LOADING MAP...', 'ACCESS GRANTED'];
+    let si = 0;
+    const statusInterval = setInterval(() => {
+      si = Math.min(si + 1, statuses.length - 1);
+      statusEl.textContent = statuses[si];
+      if (si === statuses.length - 1) clearInterval(statusInterval);
+    }, 320);
+
+    // Reveal page and remove boot screen
+    setTimeout(() => {
+      barEl.style.width = '100%';
+      statusEl.textContent = 'ACCESS GRANTED';
+      statusEl.style.color = '#39ff14';
+
+      setTimeout(() => {
+        screen.classList.add('fade-out');
+        pageShell.style.transition = 'opacity 0.5s ease';
+        pageShell.style.opacity = '1';
+        setTimeout(() => screen.remove(), 700);
+      }, 400);
+    }, 1150);
+  }
+</script>

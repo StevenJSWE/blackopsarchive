@@ -49,5 +49,29 @@ function isActive(href: string) {
     >
       Archive
     </a>
+
+    <a
+      href="/agency"
+      class:list={[
+        "font-mono text-[11px] uppercase tracking-widest px-3 py-1.5 border transition-all duration-200",
+        isActive('/agency')
+          ? "border-classified-green text-classified-green bg-classified-green/5"
+          : "border-transparent text-mid hover:text-classified-green hover:border-[#2a2a2a]"
+      ]}
+    >
+      Agencies
+    </a>
+
+    <a
+      href="/timeline"
+      class:list={[
+        "font-mono text-[11px] uppercase tracking-widest px-3 py-1.5 border transition-all duration-200",
+        isActive('/timeline')
+          ? "border-classified-green text-classified-green bg-classified-green/5"
+          : "border-transparent text-mid hover:text-classified-green hover:border-[#2a2a2a]"
+      ]}
+    >
+      Timeline
+    </a>
   </div>
 </nav>

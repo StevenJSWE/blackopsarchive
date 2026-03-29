@@ -14,6 +14,8 @@ export async function getStaticPaths() {
 const { article } = Astro.props;
 const { Content, remarkPluginFrontmatter } = await render(article);
 
+const allArticles = await getCollection('articles');
+
 const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
   confirmed: { label: 'CONFIRMED', color: '#39ff14' },
   alleged:   { label: 'ALLEGED',   color: '#cc0000' },
@@ -21,15 +23,40 @@ const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
 };
 const statusCfg = STATUS_CONFIG[article.data.status] ?? STATUS_CONFIG.alleged;
 
-// Estimated reading time (rough: 200 wpm)
+// Reading time
 const wordCount = remarkPluginFrontmatter?.words ?? 0;
-const readTime = wordCount > 0 ? Math.max(1, Math.ceil(wordCount / 200)) : null;
+const readTime  = wordCount > 0 ? Math.max(1, Math.ceil(wordCount / 200)) : null;
 
 const dateFormatted = article.data.date.toLocaleDateString('en-GB', {
-  year: 'numeric',
-  month: 'long',
-  day: 'numeric',
+  year: 'numeric', month: 'long', day: 'numeric',
 });
+
+// Related operations — explicit list first, then auto-suggest by shared agency/era
+const explicitRelated = (article.data.related ?? [])
+  .map((slug: string) => allArticles.find(a => a.id === slug))
+  .filter(Boolean);
+
+const autoRelated = explicitRelated.length === 0
+  ? allArticles
+      .filter(a =>
+        a.id !== article.id &&
+        (a.data.agency.some((ag: string) => article.data.agency.includes(ag)) ||
+         a.data.era === article.data.era)
+      )
+      .sort((a, b) => {
+        // Prioritise same agency + same era
+        const aScore =
+          (a.data.agency.some((ag: string) => article.data.agency.includes(ag)) ? 2 : 0) +
+          (a.data.era === article.data.era ? 1 : 0);
+        const bScore =
+          (b.data.agency.some((ag: string) => article.data.agency.includes(ag)) ? 2 : 0) +
+          (b.data.era === article.data.era ? 1 : 0);
+        return bScore - aScore;
+      })
+      .slice(0, 4)
+  : [];
+
+const relatedOps = explicitRelated.length > 0 ? explicitRelated : autoRelated;
 ---
 
 <BaseLayout
@@ -43,8 +70,6 @@ const dateFormatted = article.data.date.toLocaleDateString('en-GB', {
 
     <!-- Article header -->
     <header class="mb-10 pb-8 border-b border-[#1e1e1e]">
-
-      <!-- Top badges -->
       <div class="flex items-center gap-2 mb-4 flex-wrap">
         <span class="stamp-classified">Declassified</span>
         <span
@@ -55,34 +80,30 @@ const dateFormatted = article.data.date.toLocaleDateString('en-GB', {
         </span>
       </div>
 
-      <!-- Meta row -->
       <div class="flex flex-wrap items-center gap-x-4 gap-y-1 mb-4 font-mono text-[11px] uppercase tracking-widest">
         <span class="text-classified-green">{article.data.era}</span>
         <span class="text-dim">·</span>
         <span class="text-mid">{article.data.country.join(', ')}</span>
         <span class="text-dim">·</span>
-        <span class="text-dim">{article.data.agency.join(' / ')}</span>
-        {readTime && (
+        {article.data.agency.map((ag: string, i: number) => (
           <>
-            <span class="text-dim">·</span>
-            <span class="text-dim">{readTime} min read</span>
+            <a href={`/agency/${ag.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`} class="text-dim hover:text-classified-green transition-colors duration-200">{ag}</a>
+            {i < article.data.agency.length - 1 && <span class="text-dim">/</span>}
           </>
-        )}
+        ))}
+        {readTime && <><span class="text-dim">·</span><span class="text-dim">{readTime} min read</span></>}
         <span class="text-dim">·</span>
         <span class="text-dim">{dateFormatted}</span>
       </div>
 
-      <!-- Title -->
       <h1 class="font-stencil text-3xl sm:text-4xl tracking-wide mb-4 text-light leading-tight">
         {article.data.title}
       </h1>
 
-      <!-- Summary -->
       <p class="font-mono text-sm text-mid border-l-2 border-classified-red pl-4 italic leading-relaxed">
         {article.data.summary}
       </p>
 
-      <!-- Category pills -->
       {article.data.category && article.data.category.length > 0 && (
         <div class="flex flex-wrap gap-2 mt-5">
           {article.data.category.map((cat: string) => (
@@ -95,13 +116,13 @@ const dateFormatted = article.data.date.toLocaleDateString('en-GB', {
     </header>
 
     <!-- Article body -->
-    <div class="prose">
+    <div class="prose" id="article-body">
       <Content />
     </div>
 
     <!-- Sources -->
     {article.data.sources && article.data.sources.length > 0 && (
-      <footer class="mt-14 border-t border-[#1e1e1e] pt-8">
+      <section class="mt-14 border-t border-[#1e1e1e] pt-8 no-print-sources">
         <h3 class="font-stencil text-xs uppercase tracking-[0.25em] mb-5 text-classified-green flex items-center gap-2">
           <span class="text-classified-red">■</span>
           Primary Sources
@@ -121,14 +142,60 @@ const dateFormatted = article.data.date.toLocaleDateString('en-GB', {
             </li>
           ))}
         </ul>
-      </footer>
+      </section>
     )}
 
-    <!-- Back link -->
-    <div class="mt-12 pt-6 border-t border-[#1e1e1e]">
+    <!-- Related Operations -->
+    {relatedOps.length > 0 && (
+      <section class="mt-12 border-t border-[#1e1e1e] pt-8">
+        <h3 class="font-stencil text-xs uppercase tracking-[0.25em] mb-5 text-classified-green flex items-center gap-2">
+          <span class="text-classified-red">■</span>
+          Related Operations
+        </h3>
+        <ul class="divide-y divide-[#1a1a1a]">
+          {relatedOps.map((rel: any) => {
+            const relStatus = STATUS_CONFIG[rel.data.status] ?? STATUS_CONFIG.alleged;
+            return (
+              <li>
+                <a
+                  href={`/articles/${rel.id}`}
+                  class="group flex items-start gap-3 py-4 pl-2 border-l-2 border-transparent hover:border-classified-green hover:pl-3 transition-all duration-200"
+                >
+                  <div class="w-1.5 h-1.5 rounded-full mt-2 shrink-0" style={`background:${relStatus.color};`}></div>
+                  <div>
+                    <div class="flex items-center gap-2 mb-0.5 flex-wrap">
+                      <span class="text-[9px] font-mono uppercase tracking-widest text-classified-green">{rel.data.era}</span>
+                      <span
+                        class="text-[8px] font-mono px-1 py-px border"
+                        style={`color:${relStatus.color}; border-color:${relStatus.color};`}
+                      >
+                        {relStatus.label}
+                      </span>
+                    </div>
+                    <p class="font-stencil text-[15px] text-light group-hover:text-classified-green transition-colors duration-200">
+                      {rel.data.title}
+                    </p>
+                    <p class="font-mono text-[11px] text-mid mt-0.5 leading-relaxed">{rel.data.summary}</p>
+                  </div>
+                </a>
+              </li>
+            );
+          })}
+        </ul>
+      </section>
+    )}
+
+    <!-- Print dossier button + back link -->
+    <div class="mt-10 pt-6 border-t border-[#1e1e1e] flex items-center justify-between flex-wrap gap-3">
       <a href="/archive" class="font-mono text-[11px] uppercase tracking-widest text-dim hover:text-classified-green transition-colors duration-200 flex items-center gap-2">
-        <span>←</span> Back to Archive
+        ← Back to Archive
       </a>
+      <button
+        onclick="window.print()"
+        class="font-mono text-[10px] uppercase tracking-widest text-dim hover:text-classified-green border border-[#2a2a2a] hover:border-classified-green px-3 py-1.5 transition-all duration-200 cursor-pointer"
+      >
+        Print Dossier ↗
+      </button>
     </div>
 
   </main>

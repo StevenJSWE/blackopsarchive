@@ -20,6 +20,7 @@ const articles = defineCollection({
         url:   z.string(),
       })
     ),
+    related: z.array(z.string()).optional(),
   }),
 });
 

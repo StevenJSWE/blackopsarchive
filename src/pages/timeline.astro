@@ -1,0 +1,136 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import NavBar from '../components/NavBar.astro';
+
+const allArticles = await getCollection('articles');
+const articles = allArticles.sort((a, b) => a.data.date.getTime() - b.data.date.getTime());
+
+// Group by era for section breaks
+const ERA_ORDER = ['WWII', 'Post-WWII', 'Cold War', 'Vietnam', 'Reagan Era', 'Post-9/11', 'Modern'];
+
+const byEra: Record<string, typeof articles> = {};
+for (const a of articles) {
+  if (!byEra[a.data.era]) byEra[a.data.era] = [];
+  byEra[a.data.era].push(a);
+}
+
+// Sort eras by the defined order, then any unknown eras at the end
+const sortedEras = [
+  ...ERA_ORDER.filter(e => byEra[e]),
+  ...Object.keys(byEra).filter(e => !ERA_ORDER.includes(e)),
+];
+
+const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
+  confirmed: { label: 'CONFIRMED', color: '#39ff14' },
+  alleged:   { label: 'ALLEGED',   color: '#cc0000' },
+  disputed:  { label: 'DISPUTED',  color: '#f59e0b' },
+};
+---
+
+<BaseLayout
+  title="Timeline"
+  description={`Chronological timeline of ${articles.length} intelligence operations — from WWII to the present day.`}
+>
+  <NavBar currentPath="/timeline" />
+
+  <main class="max-w-3xl mx-auto px-6 py-10">
+
+    <!-- Header -->
+    <div class="mb-12">
+      <span class="stamp-classified mb-4 inline-block">Chronological Record</span>
+      <h1 class="font-stencil text-4xl text-classified-green tracking-wide mb-3 mt-3">Timeline</h1>
+      <p class="font-mono text-[11px] text-dim tracking-widest uppercase">
+        {articles.length} operations · {sortedEras.length} eras
+      </p>
+    </div>
+
+    <!-- Timeline -->
+    <div class="relative">
+
+      <!-- Vertical spine line -->
+      <div class="absolute left-[7px] top-0 bottom-0 w-px bg-[#1e1e1e]" aria-hidden="true"></div>
+
+      {sortedEras.map(era => (
+        <div class="mb-12">
+
+          <!-- Era label -->
+          <div class="flex items-center gap-3 mb-8 relative">
+            <div class="w-4 h-4 border border-classified-green bg-terminal-black relative z-10 shrink-0" style="box-shadow: 0 0 10px rgba(57,255,20,0.4);"></div>
+            <h2 class="font-stencil text-xs uppercase tracking-[0.3em] text-classified-green">{era}</h2>
+            <div class="flex-1 h-px bg-[#1e1e1e]"></div>
+          </div>
+
+          <!-- Operations in this era -->
+          <div class="space-y-0">
+            {byEra[era].map((article, i) => {
+              const statusCfg = STATUS_CONFIG[article.data.status] ?? STATUS_CONFIG.alleged;
+              const year = article.data.date.getFullYear();
+              const month = article.data.date.toLocaleString('en-GB', { month: 'short' }).toUpperCase();
+              const isLast = i === byEra[era].length - 1;
+              return (
+                <div class="flex gap-4 group relative">
+
+                  <!-- Timeline node -->
+                  <div class="flex flex-col items-center shrink-0" style="width:16px">
+                    <div
+                      class="w-3 h-3 rounded-full mt-5 relative z-10 transition-all duration-200 group-hover:scale-125"
+                      style={`background: ${statusCfg.color}; box-shadow: 0 0 6px ${statusCfg.color}60;`}
+                    ></div>
+                    {!isLast && <div class="w-px flex-1 bg-[#1e1e1e] mt-1"></div>}
+                  </div>
+
+                  <!-- Card -->
+                  <a
+                    href={`/articles/${article.id}`}
+                    class="flex-1 block mb-6 pl-3 border-l-2 border-transparent hover:border-classified-green transition-all duration-200 hover:pl-4 pb-1"
+                  >
+                    <!-- Date badge -->
+                    <div class="flex items-center gap-2 mb-1.5">
+                      <span class="font-mono text-[9px] uppercase tracking-widest text-dim">
+                        {month} {year}
+                      </span>
+                      <span
+                        class="text-[8px] font-mono tracking-widest px-1.5 py-px border"
+                        style={`color:${statusCfg.color}; border-color:${statusCfg.color}; background:${statusCfg.color}0f;`}
+                      >
+                        {statusCfg.label}
+                      </span>
+                      <span class="text-[9px] font-mono text-dim">{article.data.agency.join(' / ')}</span>
+                    </div>
+
+                    <!-- Title -->
+                    <h3 class="font-stencil text-[17px] text-light group-hover:text-classified-green transition-colors duration-200 leading-snug mb-1">
+                      {article.data.title}
+                    </h3>
+
+                    <!-- Summary -->
+                    <p class="font-mono text-[12px] text-mid leading-relaxed">{article.data.summary}</p>
+
+                    <!-- Country tags -->
+                    <div class="flex flex-wrap gap-1.5 mt-2">
+                      {article.data.country.map((c: string) => (
+                        <span class="text-[8px] font-mono uppercase tracking-widest px-1.5 py-px border border-[#2a2a2a] text-dim">
+                          {c}
+                        </span>
+                      ))}
+                    </div>
+                  </a>
+
+                </div>
+              );
+            })}
+          </div>
+
+        </div>
+      ))}
+
+      <!-- End node -->
+      <div class="flex items-center gap-3">
+        <div class="w-4 h-4 border border-[#2a2a2a] bg-terminal-black relative z-10 shrink-0 blink"></div>
+        <span class="font-mono text-[9px] uppercase tracking-widest text-dim">Record ongoing — files declassified on a rolling basis</span>
+      </div>
+
+    </div>
+  </main>
+</BaseLayout>

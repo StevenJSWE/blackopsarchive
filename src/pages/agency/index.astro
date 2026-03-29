@@ -1,0 +1,99 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import NavBar from '../../components/NavBar.astro';
+
+const articles = await getCollection('articles');
+
+// Build agency roster with counts
+const agencyMap: Record<string, { total: number; confirmed: number; alleged: number; disputed: number }> = {};
+
+for (const a of articles) {
+  for (const agency of a.data.agency) {
+    if (!agencyMap[agency]) agencyMap[agency] = { total: 0, confirmed: 0, alleged: 0, disputed: 0 };
+    agencyMap[agency].total++;
+    agencyMap[agency][a.data.status]++;
+  }
+}
+
+const agencies = Object.entries(agencyMap)
+  .sort((a, b) => b[1].total - a[1].total)
+  .map(([name, stats]) => ({
+    name,
+    slug: name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+    ...stats,
+  }));
+
+const AGENCY_META: Record<string, { full: string; founded: string; country: string; desc: string }> = {
+  'CIA':    { full: 'Central Intelligence Agency',          founded: '1947', country: 'United States', desc: 'The primary foreign intelligence and covert action arm of the US government.' },
+  'FBI':    { full: 'Federal Bureau of Investigation',      founded: '1908', country: 'United States', desc: 'US domestic intelligence and federal law enforcement agency.' },
+  'NSA':    { full: 'National Security Agency',             founded: '1952', country: 'United States', desc: 'Signals intelligence, cryptanalysis, and global mass surveillance.' },
+  'MI6':    { full: 'Secret Intelligence Service',          founded: '1909', country: 'United Kingdom', desc: 'UK foreign intelligence collection and covert overseas operations.' },
+  'GCHQ':   { full: 'Government Communications HQ',        founded: '1919', country: 'United Kingdom', desc: 'UK signals intelligence and cyber operations partner to NSA.' },
+  'Mossad': { full: 'HaMossad leModiʿin uleTafkidim Meyuḥadim', founded: '1949', country: 'Israel', desc: "Israel's foreign intelligence service and covert operations directorate." },
+  'KGB':    { full: 'Committee for State Security',         founded: '1954', country: 'Soviet Union', desc: 'Soviet intelligence, counterintelligence, and secret police (dissolved 1991).' },
+  'FSB':    { full: 'Federal Security Service',             founded: '1995', country: 'Russia', desc: 'Successor to the KGB; domestic security and counterintelligence.' },
+  'NATO':   { full: 'North Atlantic Treaty Organization',   founded: '1949', country: 'Multinational', desc: 'Military alliance whose intelligence infrastructure underpinned Operation Gladio.' },
+  'BND':    { full: 'Bundesnachrichtendienst',              founded: '1956', country: 'West Germany/Germany', desc: 'German foreign intelligence service.' },
+  'OSS':    { full: 'Office of Strategic Services',         founded: '1942', country: 'United States', desc: 'WWII predecessor to the CIA; dissolved 1945.' },
+};
+---
+
+<BaseLayout title="Agency Index" description="Intelligence agencies on record — CIA, FBI, NSA, MI6, Mossad, KGB and more. Browse operations by agency.">
+  <NavBar currentPath="/agency" />
+  <main class="max-w-3xl mx-auto px-6 py-10">
+
+    <div class="mb-10">
+      <span class="stamp-classified mb-4 inline-block">Classified</span>
+      <h1 class="font-stencil text-4xl text-classified-green tracking-wide mb-3 mt-3">Agency Index</h1>
+      <p class="font-mono text-[11px] text-dim tracking-widest uppercase">
+        {agencies.length} agencies on record
+      </p>
+    </div>
+
+    <ul class="divide-y divide-[#1a1a1a]">
+      {agencies.map(agency => {
+        const meta = AGENCY_META[agency.name];
+        return (
+          <li>
+            <a
+              href={`/agency/${agency.slug}`}
+              class="group block py-6 pl-3 border-l-2 border-transparent hover:border-classified-green transition-all duration-200 hover:pl-4"
+            >
+              <div class="flex items-start justify-between gap-4">
+                <div class="flex-1">
+                  <div class="flex items-center gap-3 mb-1.5 flex-wrap">
+                    <h2 class="font-stencil text-xl text-light group-hover:text-classified-green transition-colors duration-200">
+                      {agency.name}
+                    </h2>
+                    {meta && (
+                      <span class="font-mono text-[9px] text-dim uppercase tracking-widest">
+                        {meta.country} · est. {meta.founded}
+                      </span>
+                    )}
+                  </div>
+                  {meta && (
+                    <p class="font-mono text-[11px] text-dim mb-2">{meta.full}</p>
+                  )}
+                  {meta && (
+                    <p class="font-mono text-[12px] text-mid leading-relaxed">{meta.desc}</p>
+                  )}
+                </div>
+                <div class="text-right shrink-0">
+                  <p class="font-stencil text-2xl text-classified-green">{agency.total}</p>
+                  <p class="font-mono text-[9px] text-dim uppercase tracking-widest">operations</p>
+                  <div class="mt-1.5 flex flex-col items-end gap-0.5 text-[9px] font-mono">
+                    {agency.confirmed > 0 && <span style="color:#39ff14">{agency.confirmed} confirmed</span>}
+                    {agency.alleged   > 0 && <span style="color:#cc0000">{agency.alleged} alleged</span>}
+                    {agency.disputed  > 0 && <span style="color:#f59e0b">{agency.disputed} disputed</span>}
+                  </div>
+                </div>
+              </div>
+            </a>
+          </li>
+        );
+      })}
+    </ul>
+
+  </main>
+</BaseLayout>

@@ -1,0 +1,157 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import NavBar from '../../components/NavBar.astro';
+
+export async function getStaticPaths() {
+  const articles = await getCollection('articles');
+
+  // Collect all unique agencies
+  const agencyMap: Record<string, typeof articles> = {};
+  for (const article of articles) {
+    for (const agency of article.data.agency) {
+      const slug = agency.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+      if (!agencyMap[slug]) agencyMap[slug] = [];
+      agencyMap[slug].push(article);
+    }
+  }
+
+  return Object.entries(agencyMap).map(([slug, ops]) => ({
+    params: { slug },
+    props: { slug, ops },
+  }));
+}
+
+const { slug, ops } = Astro.props;
+
+// Derive display name from slug
+const agencyName = ops[0]?.data.agency.find(
+  a => a.toLowerCase().replace(/[^a-z0-9]+/g, '-') === slug
+) ?? slug.toUpperCase();
+
+const sorted = [...ops].sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+
+const confirmed = ops.filter(o => o.data.status === 'confirmed').length;
+const alleged   = ops.filter(o => o.data.status === 'alleged').length;
+const disputed  = ops.filter(o => o.data.status === 'disputed').length;
+
+const eras      = [...new Set(ops.map(o => o.data.era))].join(' · ');
+const countries = [...new Set(ops.flatMap(o => o.data.country))];
+
+const AGENCY_META: Record<string, { full: string; founded: string; country: string; desc: string; hq: string }> = {
+  'CIA':    { full: 'Central Intelligence Agency',    founded: '1947', country: 'United States', hq: 'Langley, Virginia', desc: 'The primary foreign intelligence and covert action arm of the US government, established under the National Security Act of 1947. Responsible for collecting, analysing, and acting on foreign intelligence, and for conducting covert operations abroad.' },
+  'FBI':    { full: 'Federal Bureau of Investigation', founded: '1908', country: 'United States', hq: 'Washington, D.C.', desc: 'US domestic intelligence and federal law enforcement agency, operating under the Department of Justice. Primary counterintelligence authority within the United States.' },
+  'NSA':    { full: 'National Security Agency',        founded: '1952', country: 'United States', hq: 'Fort Meade, Maryland', desc: 'Signals intelligence agency responsible for global collection and processing of electronic communications. Operates the largest mass surveillance infrastructure in history.' },
+  'MI6':    { full: 'Secret Intelligence Service (SIS)', founded: '1909', country: 'United Kingdom', hq: 'Vauxhall Cross, London', desc: 'UK foreign intelligence collection and covert operations. Works alongside GCHQ and MI5 under the Joint Intelligence Committee.' },
+  'GCHQ':   { full: 'Government Communications Headquarters', founded: '1919', country: 'United Kingdom', hq: 'Cheltenham, England', desc: 'UK signals intelligence and cyber operations, operating in close partnership with the NSA under the Five Eyes alliance.' },
+  'Mossad': { full: 'HaMossad leModiʿin uleTafkidim Meyuḥadim', founded: '1949', country: 'Israel', hq: 'Tel Aviv', desc: "Israel's foreign intelligence service and covert operations directorate. One of the world's most operationally active intelligence agencies." },
+  'KGB':    { full: 'Komitet Gosudarstvennoy Bezopasnosti', founded: '1954', country: 'Soviet Union', hq: 'Lubyanka Square, Moscow', desc: 'Soviet state security agency combining intelligence, counterintelligence, and secret police functions. Dissolved in 1991 following the collapse of the Soviet Union.' },
+  'NATO':   { full: 'North Atlantic Treaty Organization', founded: '1949', country: 'Multinational', hq: 'Brussels, Belgium', desc: 'Western military alliance whose classified intelligence infrastructure underpinned Operation Gladio and the network of Cold War stay-behind armies across Europe.' },
+};
+
+const meta = AGENCY_META[agencyName];
+
+const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
+  confirmed: { label: 'CONFIRMED', color: '#39ff14' },
+  alleged:   { label: 'ALLEGED',   color: '#cc0000' },
+  disputed:  { label: 'DISPUTED',  color: '#f59e0b' },
+};
+---
+
+<BaseLayout
+  title={agencyName}
+  description={`${agencyName} operations on record — ${confirmed} confirmed, ${alleged} alleged. ${meta?.desc ?? ''}`}
+>
+  <NavBar currentPath={`/agency/${slug}`} />
+  <main class="max-w-3xl mx-auto px-6 py-10">
+
+    <!-- Header -->
+    <div class="mb-10 pb-8 border-b border-[#1e1e1e]">
+      <a href="/agency" class="font-mono text-[10px] uppercase tracking-widest text-dim hover:text-classified-green transition-colors duration-200 flex items-center gap-1.5 mb-6">
+        ← Agency Index
+      </a>
+
+      <span class="stamp-classified mb-4 inline-block">Intelligence Agency</span>
+
+      <h1 class="font-stencil text-5xl text-classified-green tracking-wide mb-2 mt-3">{agencyName}</h1>
+
+      {meta && (
+        <p class="font-mono text-[11px] text-dim mb-1">{meta.full}</p>
+      )}
+
+      <!-- Agency metadata grid -->
+      {meta && (
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6 mb-6">
+          <div class="border border-[#1e1e1e] px-3 py-2">
+            <p class="font-mono text-[8px] text-dim uppercase tracking-[0.2em] mb-1">Founded</p>
+            <p class="font-mono text-[12px] text-mid">{meta.founded}</p>
+          </div>
+          <div class="border border-[#1e1e1e] px-3 py-2">
+            <p class="font-mono text-[8px] text-dim uppercase tracking-[0.2em] mb-1">Country</p>
+            <p class="font-mono text-[12px] text-mid">{meta.country}</p>
+          </div>
+          <div class="border border-[#1e1e1e] px-3 py-2">
+            <p class="font-mono text-[8px] text-dim uppercase tracking-[0.2em] mb-1">HQ</p>
+            <p class="font-mono text-[12px] text-mid">{meta.hq}</p>
+          </div>
+          <div class="border border-[#1e1e1e] px-3 py-2">
+            <p class="font-mono text-[8px] text-dim uppercase tracking-[0.2em] mb-1">On Record</p>
+            <p class="font-stencil text-[18px] text-classified-green">{ops.length}</p>
+          </div>
+        </div>
+      )}
+
+      {meta && (
+        <p class="font-mono text-sm text-mid leading-relaxed border-l-2 border-classified-red pl-4">
+          {meta.desc}
+        </p>
+      )}
+
+      <!-- Status breakdown -->
+      <div class="flex gap-4 mt-6 font-mono text-[10px] uppercase tracking-widest">
+        {confirmed > 0 && <span style="color:#39ff14">{confirmed} confirmed</span>}
+        {alleged   > 0 && <span style="color:#cc0000">{alleged} alleged</span>}
+        {disputed  > 0 && <span style="color:#f59e0b">{disputed} disputed</span>}
+        <span class="text-dim ml-auto">{eras}</span>
+      </div>
+    </div>
+
+    <!-- Operations list -->
+    <h2 class="font-stencil text-xs uppercase tracking-[0.25em] text-classified-green mb-6 flex items-center gap-2">
+      <span class="text-classified-red">■</span> Operations
+    </h2>
+
+    <ul class="divide-y divide-[#1a1a1a]">
+      {sorted.map(article => {
+        const statusCfg = STATUS_CONFIG[article.data.status] ?? STATUS_CONFIG.alleged;
+        const year = article.data.date.getFullYear();
+        return (
+          <li>
+            <a
+              href={`/articles/${article.id}`}
+              class="group block py-5 pl-3 border-l-2 border-transparent hover:border-classified-green transition-all duration-200 hover:pl-4"
+            >
+              <div class="flex items-center gap-2 mb-1.5 flex-wrap">
+                <span class="text-[10px] text-classified-green font-mono uppercase tracking-widest">{article.data.era}</span>
+                <span class="text-dim text-[10px] font-mono">·</span>
+                <span class="text-[10px] text-mid font-mono">{article.data.country.join(', ')}</span>
+                <span
+                  class="text-[9px] font-mono tracking-widest px-1.5 py-0.5 border ml-1"
+                  style={`color:${statusCfg.color}; border-color:${statusCfg.color}; background:${statusCfg.color}0f;`}
+                >
+                  {statusCfg.label}
+                </span>
+                <span class="text-[9px] font-mono text-dim ml-auto">{year}</span>
+              </div>
+              <h3 class="text-lg font-stencil text-light group-hover:text-classified-green transition-colors duration-200 mb-1">
+                {article.data.title}
+              </h3>
+              <p class="text-[13px] text-mid font-mono leading-relaxed">{article.data.summary}</p>
+            </a>
+          </li>
+        );
+      })}
+    </ul>
+
+  </main>
+</BaseLayout>
