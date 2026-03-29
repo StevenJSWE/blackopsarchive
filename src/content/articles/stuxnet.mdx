@@ -1,0 +1,71 @@
+---
+title: "Operation Olympic Games (Stuxnet)"
+date: 2010-06-17
+era: "Modern"
+country: ["Iran"]
+agency: ["CIA", "NSA"]
+category: ["Cyberwarfare", "Covert Action", "Surveillance"]
+status: "confirmed"
+lat: 33.7192
+lng: 51.7339
+summary: "The NSA and Israeli Unit 8200's joint cyberweapon that physically destroyed Iranian nuclear centrifuges — the first known state-deployed offensive cyberattack."
+sources:
+  - label: "David Sanger, New York Times — Obama Order Sped Up Wave of Cyberattacks Against Iran (2012)"
+    url: "https://www.nytimes.com/2012/06/01/world/middleeast/obama-ordered-wave-of-cyberattacks-against-iran.html"
+  - label: "IEEE Spectrum — The Real Story of Stuxnet"
+    url: "https://spectrum.ieee.org/the-real-story-of-stuxnet"
+  - label: "CSO Online — Stuxnet Explained: The First Known Cyberweapon"
+    url: "https://www.csoonline.com/article/562691/stuxnet-explained-the-first-known-cyberweapon.html"
+  - label: "Institute for Science and International Security — Did Stuxnet Take Out 1,000 Centrifuges at Natanz?"
+    url: "https://isis-online.org/isis-reports/did-stuxnet-take-out-1000-centrifuges-at-the-natanz-enrichment-plant/"
+---
+
+## Overview
+
+Operation Olympic Games was a joint US-Israeli covert operation that deployed a sophisticated cyberweapon — subsequently named Stuxnet by security researchers — to physically destroy uranium enrichment centrifuges at Iran's Natanz nuclear facility. Initiated under President George W. Bush and dramatically escalated by President Obama, the operation represented the first known use of a cyberweapon to inflict physical damage on a nation-state's critical infrastructure.
+
+It was also, by most assessments, a demonstration that nation-states could now conduct acts of war in cyberspace with the same operational effects as physical attacks — and potentially less attribution risk. The precedent it established has defined the rules, and the absence of rules, governing state cyber operations ever since.
+
+## Technical Operation
+
+Stuxnet was built to exploit a specific weakness in the Iranian nuclear programme's operational security: Natanz's centrifuge control systems were air-gapped — physically disconnected from the internet — but still ran on Siemens S7-300 programmable logic controllers (PLCs) that could be accessed via USB drive.
+
+The weapon was delivered through USB insertion, likely via infected contractor equipment. Once inside, it conducted surveillance before activating — mapping the exact configuration of Natanz's centrifuge arrays, verifying it was in the correct facility, and only then beginning to act.
+
+Its attack methodology was precise and psychologically sophisticated. Stuxnet recorded 26 days of normal centrifuge operating data and played that recording back to engineers' monitoring screens while the actual attack ran. To Iranian technicians watching their consoles, everything appeared normal. The centrifuges were silently being destroyed.
+
+The attack cycle manipulated rotor spin frequencies: driving centrifuges to extreme speeds (1,410 Hz) for 15-minute bursts, then dropping them to near-zero (2 Hz), then restoring normal operation for 13 days before repeating. The stress cycles caused rotor bearings to fail, rotors to crack, and centrifuges to tear themselves apart from the inside. Technicians assumed mechanical defects. Replacement machines were installed. They were destroyed in turn.
+
+Between 900 and 1,000 centrifuges were destroyed — approximately 20 percent of Natanz's operational capacity. Iran's uranium enrichment programme was set back an estimated two years.
+
+## Presidential Authorisation
+
+The operation was initiated under President Bush as a joint programme with Israeli intelligence, specifically Unit 8200, Israel's equivalent of the NSA. When Obama took office in January 2009, he was briefed on Olympic Games and chose to accelerate it rather than suspend it. According to reporting by David Sanger of the New York Times — who spoke with current and former US, European, and Israeli officials — Obama personally approved each escalation step, receiving briefings in the Situation Room on centrifuge destruction rates.
+
+When Stuxnet escaped Natanz in June 2010, spreading to computers in Iran, India, Indonesia, and elsewhere — an accidental consequence of a coding error attributed to Israeli developers — Obama was presented with a decision: continue or halt. He asked directly whether the malware could damage computers outside the plant. He was told it could not spread in the same way outside the specific target environment. He authorised continuation.
+
+The US government did not then, and has not since, officially acknowledged the programme. Its existence as a US-Israeli operation was confirmed by Edward Snowden in July 2013, who told *Der Spiegel*: "The NSA and Israel co-wrote it." Snowden did not release documentary evidence of the programme, and the US government continued its policy of neither confirming nor denying.
+
+## Discovery and Exposure
+
+Stuxnet was discovered on June 17, 2010 by VirusBlokAda, a Belarusian cybersecurity firm investigating a series of computer crashes in Iran. Initial analysis revealed an unusually sophisticated piece of malware using four separate zero-day exploits — previously unknown vulnerabilities — a number unprecedented in any known cyberweapon at that point.
+
+Symantec, Kaspersky Lab, and a German industrial control systems specialist, Ralph Langner, published detailed technical analyses over the following months. Langner, who reverse-engineered Stuxnet's centrifuge-targeting code in October 2010, told a conference: "This is not a one-man show. This is a nation-state operation... the attackers are from a Western country." He pointed to Israel and the United States.
+
+The technical fingerprinting was compelling. The malware contained a specific date check that would disable it if the system clock read after June 24, 2012 — a built-in expiry. It used stolen digital certificates from Realtek and JMicron, implying access to those companies' private keys. The centrifuge frequency profiles embedded in the code matched the exact specifications of the Natanz facility, information that required either physical access to the plant or extraordinarily detailed intelligence about its configuration.
+
+## Significance and Precedent
+
+Before Stuxnet, the theoretical possibility of using malware to cause physical damage to infrastructure was understood by security researchers but had not been demonstrated in practice at scale. Stuxnet proved the concept operationally.
+
+The implications were immediately understood in both directions. A weapon that could destroy centrifuges could, with different targeting parameters, destroy power grid transformers, railway signalling systems, hospital equipment, or water treatment controls. The same air-gap penetration technique worked against any SCADA system, in any country, running similar Siemens controllers — including those in US nuclear and power plants.
+
+The Obama administration's decision to proceed with and accelerate Olympic Games despite these implications established, by example, the US government's position on offensive cyber operations: that they were a legitimate instrument of national security policy, that their use did not constitute an act of war in the traditional legal sense, and that their deployment should not require public authorisation or acknowledgement.
+
+The legal vacuum this created persists. No international treaty governs offensive cyberweapons. NATO has periodically debated whether an Article 5 collective defence obligation would apply to a cyberattack, without reaching binding agreement. The UN's Group of Governmental Experts has produced non-binding norms. The Tallinn Manual, a NATO-commissioned legal analysis, has examined the law of armed conflict as applied to cyberspace — but it has no treaty force.
+
+Stuxnet opened an era in which states conduct acts of physical sabotage through computer networks and call it intelligence activity. That accounting has not been closed.
+
+## Status
+
+**Confirmed.** The technical existence of Stuxnet and its targeting of Natanz is confirmed by independent security analysis from Symantec, Kaspersky, and Ralph Langner. US and Israeli authorship was confirmed by Edward Snowden in 2013. David Sanger's reporting in the New York Times, based on interviews with named and unnamed current and former officials, provided the most detailed account of the programme's political authorisation and operational history. The US government has not officially acknowledged the programme, but has not contested the reporting.
