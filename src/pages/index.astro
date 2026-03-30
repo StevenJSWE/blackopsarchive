@@ -12,6 +12,7 @@ const pins = articles.map(a => ({
   status: a.data.status,
   lat: a.data.lat,
   lng: a.data.lng,
+  agencies: a.data.agency,
 }));
 
 const confirmed  = pins.filter(p => p.status === 'confirmed').length;

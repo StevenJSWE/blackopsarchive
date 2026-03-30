@@ -1,0 +1,41 @@
+---
+title: "Operation Cloud Hopper (APT10)"
+date: 2016-12-20
+era: "Modern"
+country: ["USA", "UK", "Japan", "Germany", "France", "Australia", "Canada", "Brazil", "UAE", "India"]
+agency: ["MSS"]
+category: ["Cyber Operations", "Industrial Espionage", "Supply Chain Attack"]
+status: "confirmed"
+lat: 39.9087
+lng: 116.3975
+summary: "Chinese MSS-linked hacking group APT10 penetrated managed IT service providers globally, using them as conduits to exfiltrate data from at least 45 companies and government agencies across 12 countries."
+sources:
+  - label: "US DoJ — Indictment of Zhu Hua and Zhang Shilong (December 2018)"
+    url: "https://www.justice.gov/opa/pr/two-chinese-hackers-associated-ministry-state-security-charged-global-computer-intrusion"
+  - label: "UK NCSC — Advisory on APT10 Cloud Hopper"
+    url: "https://www.ncsc.gov.uk/news/joint-statement-us-uk-china-cyber-threat"
+  - label: "PwC / BAE Systems — Operation Cloud Hopper (2017)"
+    url: "https://www.pwc.co.uk/cyber-security/pdf/cloud-hopper-report-final-v4.pdf"
+---
+
+## Overview
+
+Operation Cloud Hopper was the name given by cybersecurity researchers at PricewaterhouseCoopers and BAE Systems to a large-scale cyber-espionage campaign attributed to APT10, a hacking group assessed with high confidence by US, UK, and allied intelligence agencies to operate on behalf of China's Ministry of State Security (MSS), specifically its Tianjin State Security Bureau.
+
+The campaign, active from at least 2014 through 2017 (with some intrusions persisting until 2018), targeted managed service providers (MSPs) — IT outsourcing companies that administer networks for corporate and government clients. By compromising MSPs, APT10 gained access to those providers' entire client bases, effectively turning the supply chain into a mass intrusion vector. At least 45 organisations across 12 countries were confirmed compromised.
+
+## Method: The MSP Supply Chain Attack
+
+The innovation of Cloud Hopper was strategic rather than technical. Rather than targeting high-value organisations directly — which typically have stronger security — APT10 targeted their IT service providers, which by definition had trusted, persistent access to client networks. Once inside an MSP, the attackers pivoted laterally into client environments, harvesting credentials and exfiltrating intellectual property and government data while remaining hidden inside legitimate administrative traffic.
+
+Targets included aerospace, satellite technology, pharmaceutical, oil and gas, communications, and government sectors. PwC's investigation found evidence of data theft from companies in the United States, United Kingdom, Japan, Germany, France, Switzerland, Brazil, India, Australia, Canada, Finland, and the UAE.
+
+## Indictments and Attribution
+
+In December 2018, the US Department of Justice unsealed indictments against two Chinese nationals: Zhu Hua (朱华) and Zhang Shilong (张士龙), both alleged to be members of APT10 working under MSS direction. The indictment charged them with conspiracy to commit computer intrusions, conspiracy to commit wire fraud, and aggravated identity theft. Both remain at large in China.
+
+The attribution to the MSS was confirmed through joint statements by the US, UK, Australian, Canadian, New Zealand, and Japanese governments — the Five Eyes plus Japan — who simultaneously named China and specifically the MSS as responsible. UK Foreign Secretary Jeremy Hunt stated: "This is one of the most significant cyber-espionage campaigns we have seen."
+
+## Significance
+
+Cloud Hopper established the MSP supply-chain attack as a major threat vector subsequently copied by other state actors. It also represented the most explicit Five Eyes public attribution of MSS operations to date at the time of disclosure, marking a shift toward naming China openly rather than through diplomatic back-channels.
