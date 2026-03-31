@@ -8,70 +8,97 @@ function isActive(href: string) {
   if (href === '/') return currentPath === '/';
   return currentPath.startsWith(href);
 }
+
+const navLinks = [
+  { href: '/', label: 'Map' },
+  { href: '/archive', label: 'Archive' },
+  { href: '/agency', label: 'Agencies' },
+  { href: '/timeline', label: 'Timeline' },
+];
 ---
 
-<nav class="flex justify-between items-center px-6 py-4 bg-terminal-black border-b border-[#1e1e1e] sticky top-0 z-[9990] backdrop-blur-sm">
+<nav class="flex justify-between items-center px-4 sm:px-6 py-3 sm:py-4 bg-terminal-black border-b border-[#1e1e1e] sticky top-0 z-[9990] backdrop-blur-sm" id="main-nav">
 
   <!-- Wordmark -->
-  <a href="/" class="flex items-center gap-2.5 group">
+  <a href="/" class="flex items-center gap-2 sm:gap-2.5 group min-w-0">
     <span class="blink text-classified-green leading-none text-xs">●</span>
-    <span class="font-stencil text-classified-green tracking-[0.12em] uppercase text-sm group-hover:opacity-80 transition-opacity duration-200">
+    <span class="font-stencil text-classified-green tracking-[0.12em] uppercase text-[11px] sm:text-sm group-hover:opacity-80 transition-opacity duration-200 truncate">
       Black Ops Archive
     </span>
   </a>
 
-  <!-- Nav links -->
-  <div class="flex items-center gap-1">
-    <span class="font-mono text-[9px] text-classified-red uppercase tracking-widest border border-classified-red px-2 py-0.5 opacity-70 mr-4 hidden sm:inline">
+  <!-- Desktop nav links (hidden on mobile) -->
+  <div class="hidden sm:flex items-center gap-1">
+    <span class="font-mono text-[9px] text-classified-red uppercase tracking-widest border border-classified-red px-2 py-0.5 opacity-70 mr-4">
       Classified
     </span>
 
-    <a
-      href="/"
-      class:list={[
-        "font-mono text-[11px] uppercase tracking-widest px-3 py-1.5 border transition-all duration-200",
-        isActive('/')
-          ? "border-classified-green text-classified-green bg-classified-green/5"
-          : "border-transparent text-mid hover:text-classified-green hover:border-[#2a2a2a]"
-      ]}
-    >
-      Map
-    </a>
-
-    <a
-      href="/archive"
-      class:list={[
-        "font-mono text-[11px] uppercase tracking-widest px-3 py-1.5 border transition-all duration-200",
-        isActive('/archive')
-          ? "border-classified-green text-classified-green bg-classified-green/5"
-          : "border-transparent text-mid hover:text-classified-green hover:border-[#2a2a2a]"
-      ]}
-    >
-      Archive
-    </a>
-
-    <a
-      href="/agency"
-      class:list={[
-        "font-mono text-[11px] uppercase tracking-widest px-3 py-1.5 border transition-all duration-200",
-        isActive('/agency')
-          ? "border-classified-green text-classified-green bg-classified-green/5"
-          : "border-transparent text-mid hover:text-classified-green hover:border-[#2a2a2a]"
-      ]}
-    >
-      Agencies
-    </a>
-
-    <a
-      href="/timeline"
-      class:list={[
-        "font-mono text-[11px] uppercase tracking-widest px-3 py-1.5 border transition-all duration-200",
-        isActive('/timeline')
-          ? "border-classified-green text-classified-green bg-classified-green/5"
-          : "border-transparent text-mid hover:text-classified-green hover:border-[#2a2a2a]"
-      ]}
-    >
-      Timeline
-    </a>
+    {navLinks.map(link => (
+      <a
+        href={link.href}
+        class:list={[
+          "font-mono text-[11px] uppercase tracking-widest px-3 py-1.5 border transition-all duration-200",
+          isActive(link.href)
+            ? "border-classified-green text-classified-green bg-classified-green/5"
+            : "border-transparent text-mid hover:text-classified-green hover:border-[#2a2a2a]"
+        ]}
+      >
+        {link.label}
+      </a>
+    ))}
   </div>
+
+  <!-- Mobile hamburger button (visible on mobile only) -->
+  <button
+    id="nav-burger"
+    class="sm:hidden flex flex-col justify-center items-center w-10 h-10 gap-[5px] border border-[#2a2a2a] bg-transparent cursor-pointer"
+    aria-label="Toggle navigation menu"
+    aria-expanded="false"
+  >
+    <span class="nav-burger-line block w-5 h-[1.5px] bg-classified-green transition-all duration-200"></span>
+    <span class="nav-burger-line block w-5 h-[1.5px] bg-classified-green transition-all duration-200"></span>
+    <span class="nav-burger-line block w-5 h-[1.5px] bg-classified-green transition-all duration-200"></span>
+  </button>
 </nav>
+
+<!-- Mobile dropdown menu -->
+<div id="nav-mobile-menu" class="sm:hidden fixed top-[49px] left-0 right-0 z-[9989] bg-terminal-black/95 border-b border-[#1e1e1e] backdrop-blur-md" style="display:none;">
+  <div class="flex flex-col px-4 py-3 gap-1">
+    {navLinks.map(link => (
+      <a
+        href={link.href}
+        class:list={[
+          "font-mono text-[11px] uppercase tracking-widest px-3 py-3 border transition-all duration-200 block",
+          isActive(link.href)
+            ? "border-classified-green text-classified-green bg-classified-green/5"
+            : "border-transparent text-dim hover:text-classified-green hover:border-[#2a2a2a]"
+        ]}
+      >
+        {link.label}
+      </a>
+    ))}
+  </div>
+</div>
+
+<script>
+  const burger = document.getElementById('nav-burger');
+  const menu = document.getElementById('nav-mobile-menu');
+  if (burger && menu) {
+    burger.addEventListener('click', () => {
+      const isOpen = menu.style.display !== 'none';
+      menu.style.display = isOpen ? 'none' : 'block';
+      burger.setAttribute('aria-expanded', String(!isOpen));
+      // Animate burger lines to X
+      const lines = burger.querySelectorAll('.nav-burger-line');
+      if (!isOpen) {
+        lines[0].style.transform = 'translateY(6.5px) rotate(45deg)';
+        lines[1].style.opacity = '0';
+        lines[2].style.transform = 'translateY(-6.5px) rotate(-45deg)';
+      } else {
+        lines[0].style.transform = '';
+        lines[1].style.opacity = '1';
+        lines[2].style.transform = '';
+      }
+    });
+  }
+</script>

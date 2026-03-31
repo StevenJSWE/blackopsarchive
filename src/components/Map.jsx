@@ -187,8 +187,8 @@ function OpPopup({ pin }) {
       background: "#0d0d0d",
       border: `1px solid ${statusColor}30`,
       borderTop: `2px solid ${statusColor}`,
-      padding: "12px 14px",
-      minWidth: "210px", maxWidth: "260px",
+      padding: "10px 12px",
+      minWidth: "min(210px, 70vw)", maxWidth: "min(260px, 80vw)",
       fontFamily: "'IBM Plex Mono', monospace",
       boxShadow: `0 4px 24px rgba(0,0,0,0.6), 0 0 12px ${statusColor}15`,
     }}>
@@ -232,8 +232,8 @@ function HQPopup({ agency, operationCount, ops }) {
       background: "#0d0d0d",
       border: `1px solid ${color}40`,
       borderTop: `3px solid ${color}`,
-      padding: "14px 16px",
-      minWidth: "220px", maxWidth: "280px",
+      padding: "12px 14px",
+      minWidth: "min(220px, 70vw)", maxWidth: "min(280px, 80vw)",
       fontFamily: "'IBM Plex Mono', monospace",
       boxShadow: `0 4px 24px rgba(0,0,0,0.7), 0 0 16px ${color}20`,
     }}>
@@ -318,8 +318,9 @@ export default function Map({ pins }) {
 
       {/* ── Mode toggle UI ─────────────────────────────────── */}
       <div style={{
-        position: "absolute", bottom: 24, left: 16,
-        zIndex: 9999, display: "flex", flexDirection: "column", gap: "8px",
+        position: "absolute", bottom: 16, left: 8,
+        zIndex: 9999, display: "flex", flexDirection: "column", gap: "6px",
+        maxWidth: "calc(100vw - 16px)",
       }}>
         {/* MAP / NETWORK toggle */}
         <div style={{
@@ -333,11 +334,12 @@ export default function Map({ pins }) {
             style={{
               fontFamily: "'IBM Plex Mono', monospace",
               fontSize: "9px", letterSpacing: "0.15em", textTransform: "uppercase",
-              padding: "7px 12px", border: "none", cursor: "pointer",
+              padding: "8px 12px", border: "none", cursor: "pointer",
               background: !networkMode ? "#39ff1415" : "transparent",
               color:      !networkMode ? "#39ff14"   : "#4a4a4a",
               borderRight: "1px solid #2a2a2a",
               transition: "all 0.2s",
+              minHeight: "36px",
             }}
           >
             ◉ Map
@@ -347,10 +349,11 @@ export default function Map({ pins }) {
             style={{
               fontFamily: "'IBM Plex Mono', monospace",
               fontSize: "9px", letterSpacing: "0.15em", textTransform: "uppercase",
-              padding: "7px 12px", border: "none", cursor: "pointer",
+              padding: "8px 12px", border: "none", cursor: "pointer",
               background: networkMode ? "#39ff1415" : "transparent",
               color:      networkMode ? "#39ff14"   : "#4a4a4a",
               transition: "all 0.2s",
+              minHeight: "36px",
             }}
           >
             ◆ Network
@@ -362,15 +365,15 @@ export default function Map({ pins }) {
           <div style={{
             background: "#0a0a0a",
             border: "1px solid #2a2a2a",
-            padding: "8px",
-            display: "flex", flexDirection: "column", gap: "4px",
-            maxHeight: "260px", overflowY: "auto",
+            padding: "6px",
+            display: "flex", flexDirection: "column", gap: "3px",
+            maxHeight: "min(200px, 40vh)", overflowY: "auto",
           }}>
             <div style={{
               fontFamily: "'IBM Plex Mono', monospace",
               fontSize: "8px", letterSpacing: "0.2em",
               color: "#4a4a4a", textTransform: "uppercase",
-              marginBottom: "4px",
+              marginBottom: "2px",
             }}>
               Filter by agency
             </div>
@@ -380,12 +383,13 @@ export default function Map({ pins }) {
                 fontFamily: "'IBM Plex Mono', monospace",
                 fontSize: "9px", letterSpacing: "0.1em",
                 textTransform: "uppercase",
-                padding: "4px 8px", border: "1px solid",
+                padding: "5px 8px", border: "1px solid",
                 borderColor: !activeAgency ? "#39ff14" : "#2a2a2a",
                 color:        !activeAgency ? "#39ff14" : "#4a4a4a",
                 background:   !activeAgency ? "#39ff1410" : "transparent",
                 cursor: "pointer", textAlign: "left",
                 transition: "all 0.15s",
+                minHeight: "32px",
               }}
             >
               All agencies
@@ -401,13 +405,14 @@ export default function Map({ pins }) {
                     fontFamily: "'IBM Plex Mono', monospace",
                     fontSize: "9px", letterSpacing: "0.1em",
                     textTransform: "uppercase",
-                    padding: "4px 8px", border: "1px solid",
+                    padding: "5px 8px", border: "1px solid",
                     borderColor: isAct ? hq.color : "#2a2a2a",
                     color:        isAct ? hq.color : "#4a4a4a",
                     background:   isAct ? `${hq.color}10` : "transparent",
                     cursor: "pointer", textAlign: "left",
                     display: "flex", justifyContent: "space-between",
                     transition: "all 0.15s",
+                    minHeight: "32px",
                   }}
                 >
                   <span>◆ {agency}</span>
@@ -423,12 +428,13 @@ export default function Map({ pins }) {
                 fontFamily: "'IBM Plex Mono', monospace",
                 fontSize: "8px", letterSpacing: "0.1em",
                 textTransform: "uppercase",
-                padding: "4px 8px", border: "1px solid #2a2a2a",
+                padding: "5px 8px", border: "1px solid #2a2a2a",
                 color: edgesVisible ? "#707070" : "#4a4a4a",
                 background: "transparent",
                 cursor: "pointer", textAlign: "left",
-                marginTop: "4px",
+                marginTop: "2px",
                 transition: "all 0.15s",
+                minHeight: "32px",
               }}
             >
               {edgesVisible ? "● Hide edges" : "○ Show edges"}

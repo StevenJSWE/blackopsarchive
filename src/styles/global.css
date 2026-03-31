@@ -453,4 +453,31 @@ main {
   }
   h1 { font-size: 1.875rem; }
   h2 { font-size: 1.4rem; }
+
+  /* Leaflet zoom controls — move up to clear bottom overlays */
+  .leaflet-control-zoom {
+    margin-top: 8px !important;
+    margin-right: 8px !important;
+  }
+  .leaflet-control-zoom a {
+    width: 32px !important;
+    height: 32px !important;
+    line-height: 32px !important;
+    font-size: 16px !important;
+  }
+
+  /* Leaflet attribution — compact on mobile */
+  .leaflet-control-attribution {
+    font-size: 8px !important;
+    padding: 1px 4px !important;
+    max-width: 50vw;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+
+  /* Leaflet popups — don't let them overflow viewport */
+  .leaflet-popup {
+    max-width: calc(100vw - 40px) !important;
+  }
 }
