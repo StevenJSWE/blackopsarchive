@@ -24,7 +24,7 @@ const agencies  = [...new Set(articles.flatMap(a => a.data.agency))].length;
 const countries = [...new Set(articles.flatMap(a => a.data.country))].length;
 ---
 
-<BaseLayout title="Map" description="A declassified map of confirmed and alleged intelligence operations — CIA, MI6, NSA, Mossad, KGB and beyond.">
+<BaseLayout title="Map" description="A declassified map of confirmed and alleged intelligence operations — CIA, MI6, NSA, Mossad, KGB and beyond." showFooter={false}>
 
   <!-- ── Boot screen overlay ───────────────────────────────── -->
   <div id="boot-screen" aria-hidden="true">

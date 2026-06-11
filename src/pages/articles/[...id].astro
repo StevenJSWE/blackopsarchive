@@ -66,6 +66,20 @@ const relatedOps = explicitRelated.length > 0 ? explicitRelated : autoRelated;
 >
   <NavBar currentPath={Astro.url.pathname} />
 
+  <script type="application/ld+json" set:html={JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": article.data.title,
+    "datePublished": article.data.date.toISOString(),
+    "description": article.data.summary,
+    "url": `https://blackopsarchive.com/articles/${article.id}`,
+    "publisher": {
+      "@type": "Organization",
+      "name": "Black Ops Archive"
+    },
+    "about": (article.data.agency || []).map((a: string) => ({ "@type": "Organization", "name": a }))
+  })} />
+
   <main class="max-w-3xl mx-auto px-6 py-10">
 
     <!-- Article header -->
@@ -196,7 +210,30 @@ const relatedOps = explicitRelated.length > 0 ? explicitRelated : autoRelated;
       >
         Print Dossier ↗
       </button>
+      <button
+        id="copy-link"
+        class="font-mono text-[10px] uppercase tracking-widest text-dim hover:text-classified-green border border-[#2a2a2a] hover:border-classified-green px-3 py-1.5 transition-all duration-200 cursor-pointer"
+      >
+        Copy Link
+      </button>
     </div>
 
   </main>
+
+  <script>
+    const copyBtn = document.getElementById('copy-link');
+    if (copyBtn) {
+      copyBtn.addEventListener('click', async () => {
+        const url = location.href;
+        try {
+          await navigator.clipboard.writeText(url);
+          const orig = copyBtn.textContent;
+          copyBtn.textContent = 'Copied!';
+          setTimeout(() => { copyBtn.textContent = orig; }, 1400);
+        } catch {
+          prompt('Copy URL:', url);
+        }
+      });
+    }
+  </script>
 </BaseLayout>

@@ -1,0 +1,84 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import NavBar from '../components/NavBar.astro';
+---
+
+<BaseLayout
+  title="Methodology"
+  description="How Black Ops Archive selects, verifies, and presents documented intelligence operations. Scope, status definitions, and sourcing standards."
+>
+  <NavBar currentPath="/about" />
+
+  <main class="max-w-3xl mx-auto px-6 py-10">
+
+    <div class="mb-10 pb-8 border-b border-[#1e1e1e]">
+      <span class="stamp-classified mb-4 inline-block">About This Archive</span>
+      <h1 class="font-stencil text-4xl text-classified-green tracking-wide mb-3 mt-3">Methodology</h1>
+      <p class="font-mono text-[11px] text-dim tracking-widest uppercase">
+        Scope, sourcing standards, and how records are presented
+      </p>
+    </div>
+
+    <div class="prose">
+
+      <h2>Scope</h2>
+      <p>
+        Black Ops Archive covers documented intelligence operations conducted by or involving the following services and their historical predecessors:
+      </p>
+      <p class="font-mono text-[13px] text-mid">
+        CIA, MI6, Mossad, NSA, FBI, GCHQ, KGB/FSB, BND, Joint Chiefs of Staff, and allied or predecessor organizations (OSS, SOE, etc.).
+      </p>
+      <p>
+        Content is limited to <strong>documented history</strong>. No paranormal, extraterrestrial, or unverified fringe claims. Every operation included has a primary source trail: Senate or parliamentary reports, FOIA-released documents, court records, official government acknowledgements, or mainstream investigative journalism that draws directly on such records.
+      </p>
+
+      <h2>Status Definitions</h2>
+      <ul>
+        <li>
+          <strong class="text-classified-green">Confirmed</strong> — The operation (or its core elements) has been officially acknowledged by a government, agency, or parliamentary body, or is supported by an unbroken chain of declassified primary documents.
+        </li>
+        <li>
+          <strong class="text-classified-red">Alleged</strong> — Credible reporting, participant testimony, or substantial circumstantial evidence exists, but there is no official governmental or agency acknowledgement and key documents remain classified or missing.
+        </li>
+        <li>
+          <strong class="text-amber-500">Disputed</strong> — Official records conflict, multiple governments or agencies have offered contradictory accounts, or significant credible evidence challenges the dominant narrative.
+        </li>
+      </ul>
+
+      <h2>Sourcing Standards</h2>
+      <p>
+        Every factual claim in an article must be attributable to at least one primary or near-primary source. Preference order:
+      </p>
+      <ol>
+        <li>Official declassified documents (FOIA releases, NSAEBB collections, congressional reports, court filings)</li>
+        <li>Senate, parliamentary, or independent commission reports (Church Committee, Pike Committee, European Parliament resolutions, etc.)</li>
+        <li>Official acknowledgements by heads of state, ministers, or agency directors</li>
+        <li>High-quality investigative journalism that cites and links primary documents</li>
+      </ol>
+      <p>
+        Speculation beyond what the sources support is not included. When an aspect of an operation remains genuinely contested, the article states the range of evidence and the official position.
+      </p>
+
+      <h2>Related Operations</h2>
+      <p>
+        Each article page shows a "Related Operations" section. When an article declares explicit <code>related</code> slugs in its frontmatter, those are shown first. Otherwise the site automatically surfaces operations that share the same agency or era, scored to prioritize the strongest overlaps. This creates a lightweight connection graph without requiring a full database.
+      </p>
+
+      <h2>Archive, Map, and Filters</h2>
+      <p>
+        The interactive map and the Archive listing are both generated from the same content collection. Status, era, and agency filters on the Archive page are client-side and fully URL-addressable so filtered views can be bookmarked or shared. The map offers both conventional pin clustering and a "Network" mode that draws connections from agency headquarters to operations.
+      </p>
+
+      <h2>Corrections and Additions</h2>
+      <p>
+        Primary sources are sometimes re-interpreted as more documents are released. If you have additional verified primary sources or corrections to existing articles, the preferred channel is a public issue or pull request on the project repository, or direct contact with the maintainer. All accepted changes are attributed in the article history where appropriate.
+      </p>
+
+      <p class="text-dim text-[12px] mt-8">
+        This site is a personal project by Steven Baird. It is not affiliated with any government, intelligence service, or political organization.
+      </p>
+
+    </div>
+
+  </main>
+</BaseLayout>

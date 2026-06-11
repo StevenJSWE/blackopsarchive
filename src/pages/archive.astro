@@ -19,6 +19,16 @@ const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
   alleged:   { label: 'ALLEGED',   color: '#cc0000' },
   disputed:  { label: 'DISPUTED',  color: '#f59e0b' },
 };
+
+// Data for enhanced filters (era + agency pills)
+const allEras = [...new Set(articles.map(a => a.data.era))].sort();
+const agencyCountMap: Record<string, number> = {};
+articles.forEach(a => (a.data.agency || []).forEach((ag: string) => {
+  agencyCountMap[ag] = (agencyCountMap[ag] || 0) + 1;
+}));
+const allAgencies = Object.entries(agencyCountMap)
+  .sort((a, b) => b[1] - a[1])
+  .map(([name]) => name);
 ---
 
 <BaseLayout
@@ -50,8 +60,8 @@ const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
       </p>
     </div>
 
-    <!-- Filter tabs -->
-    <div class="flex gap-2 mb-8 flex-wrap" id="filter-bar">
+    <!-- Filter tabs (status) -->
+    <div class="flex gap-2 mb-4 flex-wrap" id="status-filters">
       <button
         data-filter="all"
         data-color="#39ff14"
@@ -88,13 +98,70 @@ const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
       )}
     </div>
 
+    <!-- Search -->
+    <div class="mb-3">
+      <input
+        type="search"
+        id="search-input"
+        placeholder="Search titles, summaries, agencies, categories…"
+        class="w-full bg-[#111] border border-[#2a2a2a] focus:border-classified-green text-[13px] font-mono px-3 py-2 placeholder:text-mid outline-none"
+        autocomplete="off"
+      />
+    </div>
+
+    <!-- Era filters (multi-select) -->
+    <div class="mb-2">
+      <div class="text-[9px] font-mono uppercase tracking-[0.15em] text-dim mb-1">Era</div>
+      <div class="flex flex-wrap gap-1" id="era-filters">
+        {allEras.map((era: string) => (
+          <button
+            type="button"
+            data-era={era}
+            class="era-pill text-[9px] font-mono uppercase tracking-widest px-2 py-px border border-[#2a2a2a] text-dim hover:border-classified-green hover:text-classified-green transition-colors cursor-pointer"
+          >
+            {era}
+          </button>
+        ))}
+      </div>
+    </div>
+
+    <!-- Agency filters (multi-select) -->
+    <div class="mb-4">
+      <div class="text-[9px] font-mono uppercase tracking-[0.15em] text-dim mb-1">Agency</div>
+      <div class="flex flex-wrap gap-1" id="agency-filters">
+        {allAgencies.map((agency: string) => (
+          <button
+            type="button"
+            data-agency={agency}
+            class="agency-pill text-[9px] font-mono uppercase tracking-widest px-2 py-px border border-[#2a2a2a] text-dim hover:border-classified-green hover:text-classified-green transition-colors cursor-pointer"
+          >
+            {agency}
+          </button>
+        ))}
+      </div>
+    </div>
+
+    <!-- Results toolbar -->
+    <div class="flex items-center justify-between mb-3 text-[10px] font-mono text-dim">
+      <span id="results-count">Showing all {articles.length}</span>
+      <div class="flex gap-2">
+        <button id="clear-filters" class="px-2 py-px border border-[#2a2a2a] hover:border-classified-green hover:text-classified-green transition-colors cursor-pointer">Clear</button>
+        <button id="share-view" class="px-2 py-px border border-[#2a2a2a] hover:border-classified-green hover:text-classified-green transition-colors cursor-pointer">Share view</button>
+      </div>
+    </div>
+
     <!-- Article list -->
     <ul class="divide-y divide-[#1a1a1a]" id="archive-list">
       {articles.map(article => {
         const statusCfg = STATUS_CONFIG[article.data.status] ?? STATUS_CONFIG.alleged;
         const year = article.data.date.getFullYear();
         return (
-          <li data-status={article.data.status}>
+          <li
+            data-status={article.data.status}
+            data-era={article.data.era}
+            data-agencies={(article.data.agency || []).join(',')}
+            data-search={`${article.data.title} ${article.data.summary} ${(article.data.agency || []).join(' ')} ${(article.data.category || []).join(' ')} ${article.data.era}`}
+          >
             <a
               href={`/articles/${article.id}`}
               class="group block py-6 pl-3 border-l-2 border-transparent hover:border-classified-green transition-all duration-200 hover:pl-4"
@@ -155,34 +222,179 @@ const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
 </BaseLayout>
 
 <script>
-  const buttons = document.querySelectorAll<HTMLButtonElement>('.filter-btn');
-  const items   = document.querySelectorAll<HTMLLIElement>('#archive-list li');
-  const empty   = document.getElementById('empty-state')!;
+  const statusButtons = document.querySelectorAll<HTMLButtonElement>('#status-filters .filter-btn');
+  const eraPills      = document.querySelectorAll<HTMLButtonElement>('#era-filters .era-pill');
+  const agencyPills   = document.querySelectorAll<HTMLButtonElement>('#agency-filters .agency-pill');
+  const searchInput   = document.getElementById('search-input') as HTMLInputElement | null;
+  const items         = document.querySelectorAll<HTMLLIElement>('#archive-list li');
+  const empty         = document.getElementById('empty-state')!;
+  const resultsCount  = document.getElementById('results-count')!;
+  const clearBtn      = document.getElementById('clear-filters')!;
+  const shareBtn      = document.getElementById('share-view')!;
 
-  function applyFilter(filter: string) {
+  let activeStatus: string = 'all';
+  const activeEras: Set<string> = new Set();
+  const activeAgencies: Set<string> = new Set();
+  let searchTerm: string = '';
+
+  function updateURL() {
+    const params = new URLSearchParams();
+    if (activeStatus !== 'all') params.set('status', activeStatus);
+    activeEras.forEach(e => params.append('era', e));
+    activeAgencies.forEach(a => params.append('agency', a));
+    if (searchTerm) params.set('q', searchTerm);
+    const newUrl = params.toString() ? `${location.pathname}?${params}` : location.pathname;
+    history.replaceState(null, '', newUrl);
+  }
+
+  function applyFromURL() {
+    const params = new URLSearchParams(location.search);
+    // status
+    const s = params.get('status');
+    if (s && ['confirmed','alleged','disputed'].includes(s)) {
+      activeStatus = s;
+    } else {
+      activeStatus = 'all';
+    }
+    // eras (multi)
+    activeEras.clear();
+    params.getAll('era').forEach(e => activeEras.add(e));
+    // agencies (multi)
+    activeAgencies.clear();
+    params.getAll('agency').forEach(a => activeAgencies.add(a));
+    // search
+    searchTerm = params.get('q') || '';
+    if (searchInput) searchInput.value = searchTerm;
+
+    // reflect UI
+    reflectStatusUI();
+    reflectPillsUI();
+  }
+
+  function reflectStatusUI() {
+    statusButtons.forEach(btn => {
+      const f = btn.dataset.filter ?? 'all';
+      const c = btn.dataset.color ?? '#39ff14';
+      const isActive = f === activeStatus;
+      btn.style.borderColor = isActive ? c : '#2a2a2a';
+      btn.style.color = isActive ? c : '#4a4a4a';
+      btn.style.background = isActive ? `${c}0f` : 'transparent';
+    });
+  }
+
+  function reflectPillsUI() {
+    eraPills.forEach(p => {
+      const val = p.dataset.era || '';
+      const on = activeEras.has(val);
+      p.style.borderColor = on ? '#39ff14' : '#2a2a2a';
+      p.style.color = on ? '#39ff14' : '#707070';
+      p.style.background = on ? 'rgba(57,255,20,0.06)' : 'transparent';
+    });
+    agencyPills.forEach(p => {
+      const val = p.dataset.agency || '';
+      const on = activeAgencies.has(val);
+      p.style.borderColor = on ? '#39ff14' : '#2a2a2a';
+      p.style.color = on ? '#39ff14' : '#707070';
+      p.style.background = on ? 'rgba(57,255,20,0.06)' : 'transparent';
+    });
+  }
+
+  function applyFilters() {
     let visible = 0;
+    const q = (searchTerm || '').toLowerCase().trim();
+
     items.forEach(item => {
-      const show = filter === 'all' || item.dataset.status === filter;
+      const status = item.dataset.status || '';
+      const era = item.dataset.era || '';
+      const agenciesStr = item.dataset.agencies || '';
+      const searchBlob = (item.dataset.search || '').toLowerCase();
+
+      const statusOk = activeStatus === 'all' || status === activeStatus;
+      const eraOk = activeEras.size === 0 || activeEras.has(era);
+      const agencyOk = activeAgencies.size === 0 || activeAgencies.has(agenciesStr.split(',')[0]) || agenciesStr.split(',').some(a => activeAgencies.has(a));
+      const searchOk = !q || searchBlob.includes(q);
+
+      const show = statusOk && eraOk && agencyOk && searchOk;
       item.style.display = show ? '' : 'none';
       if (show) visible++;
     });
+
     empty.classList.toggle('hidden', visible > 0);
+    resultsCount.textContent = visible === items.length
+      ? `Showing all ${items.length}`
+      : `Showing ${visible} of ${items.length}`;
   }
 
-  buttons.forEach(btn => {
+  // Status clicks (exclusive)
+  statusButtons.forEach(btn => {
     btn.addEventListener('click', () => {
-      const filter = btn.dataset.filter ?? 'all';
-      const color  = btn.dataset.color ?? '#39ff14';
-
-      buttons.forEach(b => {
-        const isActive = b === btn;
-        const c = b.dataset.color ?? '#39ff14';
-        b.style.borderColor = isActive ? c : '#2a2a2a';
-        b.style.color       = isActive ? c : '#4a4a4a';
-        b.style.background  = isActive ? `${c}0f` : 'transparent';
-      });
-
-      applyFilter(filter);
+      activeStatus = btn.dataset.filter ?? 'all';
+      reflectStatusUI();
+      applyFilters();
+      updateURL();
     });
   });
+
+  // Era pills (multi toggle)
+  eraPills.forEach(pill => {
+    pill.addEventListener('click', () => {
+      const val = pill.dataset.era || '';
+      if (activeEras.has(val)) activeEras.delete(val); else activeEras.add(val);
+      reflectPillsUI();
+      applyFilters();
+      updateURL();
+    });
+  });
+
+  // Agency pills (multi toggle)
+  agencyPills.forEach(pill => {
+    pill.addEventListener('click', () => {
+      const val = pill.dataset.agency || '';
+      if (activeAgencies.has(val)) activeAgencies.delete(val); else activeAgencies.add(val);
+      reflectPillsUI();
+      applyFilters();
+      updateURL();
+    });
+  });
+
+  // Search
+  if (searchInput) {
+    searchInput.addEventListener('input', () => {
+      searchTerm = searchInput.value || '';
+      applyFilters();
+      updateURL();
+    });
+  }
+
+  // Clear
+  clearBtn.addEventListener('click', () => {
+    activeStatus = 'all';
+    activeEras.clear();
+    activeAgencies.clear();
+    searchTerm = '';
+    if (searchInput) searchInput.value = '';
+    reflectStatusUI();
+    reflectPillsUI();
+    applyFilters();
+    history.replaceState(null, '', location.pathname);
+  });
+
+  // Share view (copy current URL with filters)
+  shareBtn.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(location.href);
+      const orig = shareBtn.textContent;
+      shareBtn.textContent = 'Copied!';
+      setTimeout(() => { shareBtn.textContent = orig; }, 1200);
+    } catch {
+      // fallback
+      prompt('Copy this URL:', location.href);
+    }
+  });
+
+  // Init
+  applyFromURL();
+  reflectStatusUI();
+  reflectPillsUI();
+  applyFilters();
 </script>

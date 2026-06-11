@@ -443,6 +443,24 @@ main {
   .prose + section { page-break-before: always; }
 }
 
+/* ── Accessibility: respect reduced motion ────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .grain,
+  .scanlines,
+  .crt-glow,
+  .blink,
+  #boot-screen,
+  .animate,
+  [style*="animation"] {
+    animation: none !important;
+    transition: none !important;
+  }
+  /* Keep the boot screen functional but instant */
+  #boot-screen {
+    transition: none;
+  }
+}
+
 /* ── Mobile ─────────────────────────────────────────────────── */
 @media (max-width: 640px) {
   body {
